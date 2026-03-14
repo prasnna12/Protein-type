@@ -60,6 +60,7 @@ const ResultCard = ({ title, value, icon, delay, children, grade, symmetry }) =>
 
 const Slide1 = ({ next, setData }) => {
   const [image, setImage] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanPhase, setScanPhase] = useState("");
