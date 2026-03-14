@@ -2,13 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBFIQCtZs-zct6BuXrzsKuhwZGfHbrm0Yk",
-  authDomain: "prasnna-gym.firebaseapp.com",
-  projectId: "prasnna-gym",
-  storageBucket: "prasnna-gym.firebasestorage.app",
-  messagingSenderId: "82501350345",
-  appId: "1:82501350345:web:d3086abc4a11af20ac6e18",
-  measurementId: "G-FF4ELKLLFE"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);

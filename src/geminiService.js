@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// API Key directly implemented as requested
-const API_KEY = "AIzaSyCcPzmTEdEv7ua4aYumzdRCr7vmmRXW-TE";
+// Use environment variable for the API Key
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // Helper function to convert base64 to File object/GenerativePart
