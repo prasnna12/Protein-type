@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import imgVeg from './assets/diet-veg.png';
+import imgNonVeg from './assets/diet-nonveg.png';
 
 const SlideDiet = ({ next, setData }) => {
   const [selected, setSelected] = useState(null);
@@ -7,32 +9,30 @@ const SlideDiet = ({ next, setData }) => {
     {
       id: 'vegetarian',
       label: 'Vegetarian',
+      img: imgVeg,
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="diet-svg-icon veg-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
           <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
         </svg>
       ),
       desc: 'Plant-based proteins — paneer, tofu, soya chunks, lentils, legumes and dairy products.',
-      color: '#22c55e',
-      glow: 'rgba(34,197,94,0.15)',
-      border: 'rgba(34,197,94,0.5)',
+      theme: 'veg-theme',
+      accent: '#22c55e'
     },
     {
       id: 'non_vegetarian',
       label: 'Non-Vegetarian',
+      img: imgNonVeg,
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="diet-svg-icon nonveg-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m20.536 8.464-9.071 9.071a6.414 6.414 0 0 1-9.072-9.071L11.464 3.929a6.414 6.414 0 0 1 9.072 4.535Z"/>
           <path d="M16 8 8 16"/>
-          <path d="M12.5 15.5 11 17"/>
-          <path d="M15.5 12.5 17 11"/>
         </svg>
       ),
       desc: 'High-quality animal proteins — chicken, eggs, fish, lean meat, turkey and dairy.',
-      color: '#f97316',
-      glow: 'rgba(249,115,22,0.15)',
-      border: 'rgba(249,115,22,0.5)',
+      theme: 'nonveg-theme',
+      accent: '#ef4444'
     },
   ];
 
@@ -55,25 +55,23 @@ const SlideDiet = ({ next, setData }) => {
         {options.map(opt => (
           <div
             key={opt.id}
-            className={`diet-card glass-card ${selected === opt.id ? 'active' : ''}`}
-            style={selected === opt.id ? {
-              borderColor: opt.border,
-              background: opt.glow,
-              boxShadow: `0 0 40px ${opt.glow}`,
-            } : {}}
+            className={`diet-visual-card glass-card ${opt.theme} ${selected === opt.id ? 'active' : ''}`}
             onClick={() => setSelected(opt.id)}
           >
-            {selected === opt.id && (
-              <div className="check-mark-badge" style={{ background: opt.color }}>✓</div>
-            )}
-            <div className="diet-glow-bg" style={{ background: opt.glow }}></div>
-            <div className="diet-emoji-box" style={{ borderColor: selected === opt.id ? opt.border : 'transparent' }}>
-              <span className="diet-icon-wrapper">{opt.icon}</span>
+            <div className="diet-card-img-wrap">
+              <img src={opt.img} alt={opt.label} className="diet-hero-img" />
+              <div className="diet-card-overlay"></div>
+              {selected === opt.id && <div className="diet-select-check">✓</div>}
             </div>
-            <h2 className="diet-label" style={selected === opt.id ? { color: opt.color } : {}}>
-              {opt.label}
-            </h2>
-            <p className="diet-desc">{opt.desc}</p>
+            
+            <div className="diet-card-content">
+              <div className="diet-title-row">
+                <div className="diet-mini-icon">{opt.icon}</div>
+                <h2>{opt.label}</h2>
+              </div>
+              <p>{opt.desc}</p>
+              <div className="diet-accent-bar" style={{ background: opt.accent }}></div>
+            </div>
           </div>
         ))}
       </div>
@@ -98,92 +96,120 @@ const SlideDiet = ({ next, setData }) => {
 
       <style>{`
         .diet-container {
-          max-width: 860px;
+          max-width: 950px;
           width: 100%;
           padding: 48px 40px;
         }
-        .diet-header { text-align: center; margin-bottom: 40px; }
-        .diet-header h1 { font-size: 2rem; }
-        .diet-subtitle { color: var(--text-dim); font-size: 0.95rem; max-width: 500px; margin: 10px auto 0; line-height: 1.6; }
+        .diet-header { text-align: center; margin-bottom: 50px; }
+        .diet-header h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 12px; }
+        .diet-subtitle { color: var(--text-dim); font-size: 1.05rem; max-width: 550px; margin: 0 auto; line-height: 1.6; }
 
-        .diet-options { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px; }
-        .diet-card {
-          position: relative;
-          padding: 48px 32px;
-          border-radius: 28px;
-          cursor: pointer;
-          text-align: center;
-          overflow: hidden;
-          transition: var(--transition-smooth);
-        }
-        .diet-card:hover { transform: translateY(-8px); border-color: rgba(255,255,255,0.15); }
-        .diet-card.active { transform: translateY(-8px); }
+        .diet-options { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; }
         
-        .diet-glow-bg {
+        .diet-visual-card {
+           padding: 0;
+           cursor: pointer;
+           border-radius: 28px;
+           overflow: hidden;
+           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+           background: rgba(15, 23, 42, 0.3) !important;
+           border: 1px solid rgba(255,255,255,0.05);
+           position: relative;
+        }
+        
+        .diet-card-img-wrap {
+          height: 220px;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .diet-hero-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.6s ease;
+        }
+        
+        .diet-card-overlay {
           position: absolute;
-          width: 120px;
-          height: 120px;
-          border-radius: 50%;
-          filter: blur(40px);
-          top: -20px;
-          right: -20px;
-          opacity: 0.5;
-          z-index: 0;
+          inset: 0;
+          background: linear-gradient(to bottom, transparent, rgba(2, 6, 23, 0.9));
         }
 
-        .check-mark-badge {
+        .diet-visual-card:hover {
+          transform: translateY(-10px);
+          border-color: rgba(255,255,255,0.2);
+        }
+        .diet-visual-card:hover .diet-hero-img { transform: scale(1.1); }
+
+        .diet-visual-card.active {
+          transform: translateY(-10px);
+        }
+        
+        .veg-theme.active { border-color: #22c55e; box-shadow: 0 10px 30px rgba(34, 197, 94, 0.2); }
+        .nonveg-theme.active { border-color: #ef4444; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.2); }
+
+        .diet-select-check {
           position: absolute;
-          top: 20px;
-          right: 20px;
-          width: 24px;
-          height: 24px;
+          top: 15px;
+          right: 15px;
+          width: 28px;
+          height: 28px;
+          background: var(--primary-color);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           color: #000;
           font-weight: 900;
-          font-size: 0.85rem;
           z-index: 2;
+          box-shadow: 0 0 15px var(--primary-glow);
+          animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .diet-emoji-box {
-          width: 90px;
-          height: 90px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid transparent;
-          border-radius: 24px;
+        .diet-card-content {
+           padding: 24px 30px 30px;
+           position: relative;
+        }
+        
+        .diet-title-row {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 12px;
+        }
+        
+        .diet-mini-icon {
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          background: rgba(255,255,255,0.04);
           display: flex;
           align-items: center;
           justify-content: center;
-          margin: 0 auto 24px;
-          transition: var(--transition-smooth);
-          z-index: 1;
-          position: relative;
-        }
-        .diet-card:hover .diet-emoji-box { background: rgba(255,255,255,0.08); transform: translateY(-3px); }
-        
-        .diet-icon-wrapper svg.diet-svg-icon {
-          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
-        .veg-icon { color: #22c55e; filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.4)); }
-        .nonveg-icon { color: #f97316; filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.4)); }
+        .veg-theme .diet-mini-icon { color: #22c55e; }
+        .nonveg-theme .diet-mini-icon { color: #ef4444; }
         
-        .diet-card:hover .veg-icon { transform: scale(1.15); filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.8)); }
-        .diet-card:hover .nonveg-icon { transform: scale(1.15); filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.8)); }
+        .diet-card-content h2 { font-size: 1.5rem; font-weight: 800; color: #fff; }
+        .diet-card-content p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.6; margin-bottom: 20px; }
         
-        .diet-label { font-size: 1.6rem; font-weight: 800; margin-bottom: 12px; transition: color 0.3s; }
-        .diet-desc { font-size: 0.9rem; color: var(--text-dim); line-height: 1.6; }
+        .diet-accent-bar {
+          height: 3px;
+          width: 40px;
+          border-radius: 10px;
+          transition: width 0.4s ease;
+        }
+        .diet-visual-card.active .diet-accent-bar { width: 100%; }
 
         .diet-footer { display: flex; justify-content: space-between; align-items: center; }
-        .selection-hint { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .selection-hint { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
 
         @media (max-width: 640px) {
           .diet-options { grid-template-columns: 1fr; gap: 16px; }
           .diet-container { padding: 32px 20px; }
           .diet-footer { flex-direction: column; gap: 24px; text-align: center; }
-        }
       `}</style>
     </div>
   );

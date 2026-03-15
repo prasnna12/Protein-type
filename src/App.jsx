@@ -7,7 +7,7 @@ import Slide3 from './Slide3'
 import Slide4 from './Slide4'
 import Footer from './Footer'
 import { useAuth } from './AuthContext'
-import AuthPage from './AuthPage'
+import AuthModal from './AuthModal'
 
 const TOTAL_SLIDES = 5;
 
@@ -17,9 +17,36 @@ const BackIcon = () => (
   </svg>
 );
 
+const NavIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><path d="m9.05 10 1-.92a6.5 6.5 0 1 1 3.9 0l1 .92"/><path d="M12 12v.01"/>
+  </svg>
+);
+
+const PhoneIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.31-2.31a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+  </svg>
+);
+
+const MenuIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/>
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+
 function App() {
   const { user, logout } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(1);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authTab, setAuthTab] = useState('login');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userData, setUserData] = useState({
     photo: null,
     analysis: null,
@@ -31,210 +58,274 @@ function App() {
 
   const nextSlide = () => setCurrentSlide(prev => Math.min(prev + 1, TOTAL_SLIDES));
   const prevSlide = () => setCurrentSlide(prev => Math.max(prev - 1, 1));
+  const goToSlide = (slide) => {
+    setCurrentSlide(slide);
+    setIsMobileMenuOpen(false);
+  };
+
+  const openAuth = (tab) => {
+    setAuthTab(tab);
+    setIsAuthModalOpen(true);
+    setIsMobileMenuOpen(false);
+  };
 
   const renderSlide = () => {
     switch(currentSlide) {
-      case 1: return <Slide1 next={nextSlide} setData={setUserData} />;
+      case 1: return <Slide1 next={nextSlide} setData={setUserData} onLoginRequired={() => openAuth('login')} />;
       case 2: return <Slide2 next={nextSlide} prev={prevSlide} setData={setUserData} data={userData} />;
       case 3: return <SlideDiet next={nextSlide} prev={prevSlide} setData={setUserData} />;
       case 4: return <Slide3 next={nextSlide} prev={prevSlide} data={userData} />;
       case 5: return <Slide4 prev={prevSlide} data={userData} />;
-      default: return <Slide1 next={nextSlide} setData={setUserData} />;
+      default: return <Slide1 next={nextSlide} setData={setUserData} onLoginRequired={() => openAuth('login')} />;
     }
   };
 
-  if (!user) {
-    return (
-      <div className="page-root">
-        <AuthPage />
-        <Footer />
-      </div>
-    );
-  }
-
   return (
     <div className="page-root">
-      <div className="app-container">
-        <div className="brand-signature">@prasnnacreativity</div>
-        <nav className="nav-header glass-card">
-          <div className="nav-left">
-            {currentSlide > 1 ? (
-              <button className="btn-back-global" onClick={prevSlide} title="Go Back">
-                <BackIcon />
-                <span>Back</span>
-              </button>
-            ) : (
-              <div className="logo-wrap">
-                <div className="logo text-gradient">Protein.in AI</div>
-                <div className="tagline">Smart AI Fitness & Protein Nutrition Planner</div>
+      <header className="main-header glass-card">
+        <div className="header-inner">
+          <div className="header-left">
+            <div className="logo-section" onClick={() => goToSlide(1)}>
+              <div className="logo-icon-wrap">
+                <NavIcon />
               </div>
-            )}
-            
-            <div className="user-info">
-              <span className="welcome-text">Hi, {user.displayName || user.email.split('@')[0]} 👋</span>
-              <button className="btn-logout" onClick={logout}>Logout</button>
+              <div className="logo-text">
+                <span className="logo-title text-gradient">Protein.in AI</span>
+                <span className="logo-tag">SMART NUTRITION AI</span>
+              </div>
             </div>
           </div>
 
-          {currentSlide > 1 && <div className="logo-center text-gradient">Protein.in AI</div>}
+          <nav className={`header-center ${isMobileMenuOpen ? 'mobile-active' : ''}`}>
+            <ul className="nav-menu">
+              <li><button onClick={() => goToSlide(1)} className={currentSlide === 1 ? 'active' : ''}>Home</button></li>
+              <li><button onClick={() => goToSlide(1)} className={currentSlide === 1 ? 'active' : ''}>AI Analysis</button></li>
+              <li><button onClick={() => goToSlide(3)} className={currentSlide === 3 ? 'active' : ''}>Diet Plan</button></li>
+            </ul>
+          </nav>
 
-          <div className="step-indicator">
-            {Array.from({ length: TOTAL_SLIDES }, (_, i) => i + 1).map(s => (
-              <div
-                key={s}
-                className={`step ${s === currentSlide ? 'active' : ''} ${s < currentSlide ? 'completed' : ''}`}
-                title={['Upload Photo', 'Choose Goal', 'Diet Type', 'Meal Plan', 'Foods'][s - 1]}
-              >
-                {s}
+          <div className="header-right">
+            {user ? (
+              <div className="user-profile-widget">
+                <div className="user-avatar-small">
+                  {user.photoURL ? <img src={user.photoURL} alt="" /> : <span>{user.email[0].toUpperCase()}</span>}
+                </div>
+                <span className="user-name-small desktop-only">{user.displayName || user.email.split('@')[0]}</span>
+                <button className="btn-header-logout" onClick={logout}>
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
               </div>
-            ))}
+            ) : (
+              <div className="auth-buttons-group">
+                <button className="btn-signin-nav desktop-only" onClick={() => openAuth('login')}>Sign In</button>
+                <button className="btn-signup-nav glow-primary" onClick={() => openAuth('signup')}>Sign Up</button>
+              </div>
+            )}
+            <button className="mobile-menu-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+            </button>
           </div>
-        </nav>
+        </div>
+      </header>
 
-        <main className="slide-content stagger-in" key={currentSlide}>
-          {renderSlide()}
-        </main>
+      <div className="app-main-content">
+        <div className="app-container">
+          <div className="slide-progress-bar">
+             <div className="progress-track">
+               <div className="progress-fill" style={{ width: `${(currentSlide / TOTAL_SLIDES) * 100}%` }}></div>
+             </div>
+             <div className="progress-steps-label">
+                STEP {currentSlide} OF {TOTAL_SLIDES}: {['Home', 'Goal', 'Diet', 'Report', 'Plan'][currentSlide - 1].toUpperCase()}
+             </div>
+          </div>
+
+          <main className="slide-content-wrapper stagger-in" key={currentSlide}>
+            {renderSlide()}
+          </main>
+        </div>
       </div>
 
       <Footer />
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        initialTab={authTab}
+      />
 
       <style>{`
         .page-root {
           display: flex;
           flex-direction: column;
           min-height: 100vh;
+          background: #020617;
         }
-        .app-container {
-          max-width: 1200px;
+
+        .main-header {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 80px;
+          z-index: 1000;
+          backdrop-filter: blur(20px);
+          background: rgba(15, 23, 42, 0.7) !important;
+          border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+          border-radius: 0;
+        }
+
+        .header-inner {
+          max-width: 1400px;
           margin: 0 auto;
-          padding: 10px 20px 20px;
-          flex: 1;
+          height: 100%;
+          padding: 0 40px;
           display: flex;
-          flex-direction: column;
-          width: 100%;
-        }
-        .brand-signature {
-          font-size: 0.65rem;
-          font-weight: 800;
-          color: var(--text-dim);
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          margin-bottom: 8px;
-          margin-left: 30px;
-          opacity: 0.6;
-          user-select: none;
-        }
-        .nav-header {
-          display: flex;
+          align-items: center;
           justify-content: space-between;
-          align-items: center;
-          padding: 12px 30px;
-          margin-bottom: 40px;
-          position: sticky;
-          top: 20px;
-          z-index: 100;
         }
-        .nav-left {
+
+        .header-left .logo-section {
           display: flex;
           align-items: center;
-          gap: 25px;
+          gap: 15px;
+          cursor: pointer;
+          transition: 0.3s;
         }
-        .logo { font-size: 1.4rem; font-weight: 800; line-height: 1; }
-        .logo-wrap { display: flex; flex-direction: column; gap: 4px; }
-        .tagline { font-size: 0.65rem; font-weight: 600; color: var(--text-dim); letter-spacing: 0.5px; }
-        .logo-center {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-          font-size: 1.3rem;
-          font-weight: 800;
-          pointer-events: none;
-        }
-        
-        .btn-back-global {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid var(--surface-border);
-          color: white;
-          padding: 8px 16px;
+        .header-left .logo-section:hover { transform: translateY(-1px); }
+
+        .logo-icon-wrap {
+          width: 40px;
+          height: 40px;
+          background: linear-gradient(135deg, var(--primary-color), #00ffcc);
           border-radius: 12px;
           display: flex;
           align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          font-weight: 700;
-          font-size: 0.9rem;
-          transition: var(--transition-smooth);
-        }
-        .btn-back-global:hover {
-          background: rgba(255, 255, 255, 0.1);
-          transform: translateX(-4px);
-          border-color: var(--primary-color);
-          color: var(--primary-color);
-        }
-        .btn-back-global svg { width: 18px; height: 18px; }
-
-        .user-info {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          font-size: 0.85rem;
-          padding-left: 20px;
-          border-left: 1px solid var(--surface-border);
-        }
-        .welcome-text { color: var(--text-dim); }
-        .btn-logout {
-          background: none;
-          border: none;
-          color: var(--secondary-color);
-          font-weight: 700;
-          cursor: pointer;
-          padding: 0;
-          font-family: inherit;
-        }
-        .btn-logout:hover { text-decoration: underline; }
-        
-        .step-indicator { display: flex; gap: 10px; }
-        .step {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          border: 2px solid var(--surface-border);
-          display: flex;
-          align-items: center;
           justify-content: center;
-          font-weight: 700;
-          font-size: 0.8rem;
-          color: var(--text-dim);
-          transition: var(--transition-smooth);
-        }
-        .step.active {
-          border-color: var(--primary-color);
-          color: var(--primary-color);
+          color: #000;
           box-shadow: 0 0 15px var(--primary-glow);
         }
-        .step.completed {
+
+        .logo-text { display: flex; flex-direction: column; line-height: 1; }
+        .logo-title { font-size: 1.3rem; font-weight: 900; letter-spacing: -0.5px; }
+        .logo-tag { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; font-weight: 700; }
+
+        .nav-menu { display: flex; list-style: none; gap: 35px; }
+        .nav-menu button {
+          background: none;
+          border: none;
+          color: var(--text-dim);
+          font-weight: 700;
+          font-size: 0.95rem;
+          cursor: pointer;
+          transition: 0.3s;
+          padding: 8px 0;
+          position: relative;
+        }
+        .nav-menu button:hover { color: #fff; }
+        .nav-menu button.active { color: var(--primary-color); }
+        .nav-menu button.active::after {
+          content: '';
+          position: absolute;
+          bottom: -4px;
+          left: 0;
+          right: 0;
+          height: 2px;
           background: var(--primary-color);
-          border-color: var(--primary-color);
-          color: #000;
+          box-shadow: 0 0 10px var(--primary-glow);
         }
-        .slide-content {
-          flex: 1;
+
+        .header-right { display: flex; align-items: center; gap: 20px; }
+
+        .contact-link {
           display: flex;
-          flex-direction: column;
           align-items: center;
-          width: 100%;
+          gap: 8px;
+          color: var(--text-dim);
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 0.85rem;
+          transition: 0.3s;
+          margin-right: 15px;
+          padding: 8px 12px;
+          background: rgba(255,255,255,0.03);
+          border-radius: 100px;
         }
+        .contact-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+        .auth-buttons-group { display: flex; align-items: center; gap: 15px; }
+
+        .btn-signin-nav {
+          background: none;
+          border: 1px solid rgba(255,255,255,0.15);
+          color: #fff;
+          padding: 10px 22px;
+          border-radius: 12px;
+          font-weight: 800;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: 0.3s;
+        }
+        .btn-signin-nav:hover { background: rgba(255,255,255,0.05); border-color: var(--primary-color); color: var(--primary-color); }
+
+        .btn-signup-nav {
+          background: var(--primary-color);
+          color: #000;
+          padding: 10px 22px;
+          border-radius: 12px;
+          font-weight: 800;
+          font-size: 0.85rem;
+          border: none;
+          cursor: pointer;
+          transition: 0.3s;
+          box-shadow: 0 4px 15px var(--primary-glow);
+        }
+        .btn-signup-nav:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--primary-glow); }
+
+        .user-profile-widget { display: flex; align-items: center; gap: 12px; padding: 6px 12px; background: rgba(255,255,255,0.05); border-radius: 100px; }
+        .user-info-brief { display: flex; align-items: center; gap: 10px; }
+        .user-avatar-small { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #000; overflow: hidden; font-size: 0.8rem; }
+        .user-name-small { font-weight: 700; font-size: 0.85rem; color: #fff; }
+        .btn-header-logout { background: none; border: none; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; transition: 0.3s; }
+        .btn-header-logout:hover { color: #ff4d4d; }
+
+        .app-main-content { padding-top: 100px; flex: 1; }
+        .app-container { max-width: 1200px; margin: 0 auto; padding: 20px; width: 100%; }
+
+        .brand-signature { font-size: 0.65rem; font-weight: 800; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; opacity: 0.6; }
+
+        .slide-progress-bar { margin-bottom: 40px; }
+        .progress-track { height: 4px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; margin-bottom: 10px; }
+        .progress-fill { height: 100%; background: var(--primary-color); box-shadow: 0 0 10px var(--primary-glow); transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .progress-steps-label { font-size: 0.7rem; font-weight: 800; color: var(--text-dim); letter-spacing: 1px; }
+
+        .mobile-menu-toggle { display: none; background: none; border: none; color: #fff; cursor: pointer; }
+
+        @media (max-width: 1100px) {
+          .nav-menu { gap: 20px; }
+          .header-inner { padding: 0 20px; }
+        }
+
         @media (max-width: 900px) {
-          .logo-center { display: none; }
-        }
-        @media (max-width: 768px) {
-          .nav-header { padding: 15px 20px; }
-          .welcome-text { display: none; }
-          .user-info { padding-left: 0; border: none; }
+          .desktop-only { display: none; }
+          .header-center {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            padding: 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: none;
+          }
+          .header-center.mobile-active { display: block; }
+          .nav-menu { flex-direction: column; gap: 20px; }
+          .mobile-menu-toggle { display: block; }
+          .auth-buttons-group { gap: 10px; }
+          .btn-signin-nav, .btn-signup-nav { padding: 8px 16px; font-size: 0.75rem; }
         }
       `}</style>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -5,29 +5,25 @@ const DIET_LABELS = { vegetarian: '🥗 Vegetarian', non_vegetarian: '🍗 Non-V
 
 const MEAL_META = {
   Breakfast:      { icon: '🌅', color: '#f59e0b', desc: 'Fuel your day with high-protein energy.' },
-  Lunch:          { icon: '☀️', color: '#22c55e', desc: 'Balanced nutrition for sustained peak performance.' },
-  'Pre-Workout':  { icon: '⚡', color: '#3b82f6', desc: 'Primary energy sources to power your training.' },
-  'Post-Workout': { icon: '💪', color: '#8b5cf6', desc: 'Maximum protein recovery for muscle growth.' },
-  Dinner:         { icon: '🌙', color: '#ec4899', desc: 'Light and effective recovery before sleep.' },
+  Snack:          { icon: '🍎', color: '#22c55e', desc: 'Maintain energy levels between meals.' },
+  Lunch:          { icon: '☀️', color: '#3b82f6', desc: 'Balanced nutrition for peak performance.' },
+  'Pre-Workout':  { icon: '⚡', color: '#8b5cf6', desc: 'Energy to power your training.' },
+  'Post-Workout': { icon: '💪', color: '#06b6d4', desc: 'Protein recovery for muscle growth.' },
+  Dinner:         { icon: '🌙', color: '#ec4899', desc: 'Recovery before sleep.' },
 };
 
 /* ── Compact Food Card (inside meal detail) ────────── */
 const MealFoodCard = ({ food, onClick }) => (
-  <div className="mf-card" onClick={() => onClick(food)}>
+  <div className="mf-card glass-card" onClick={() => onClick(food)}>
     <div className="mf-img-wrap">
-      <img
-        src={food.image}
-        alt={food.name}
-        onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-      />
-      <div className="mf-emoji-fb">{food.emoji || '🍽️'}</div>
+      <img src={food.image} alt={food.name} />
       <div className="mf-overlay">VIEW GUIDE</div>
     </div>
     <div className="mf-body">
       <p className="mf-name">{food.name}</p>
       <div className="mf-macros">
-        <span className="mf-mac p-tag">{food.protein}g Protein</span>
-        <span className="mf-mac k-tag">{food.calories} kcal</span>
+        <span className="mf-mac">P: {food.protein}g</span>
+        <span className="mf-mac">C: {food.carbs}g</span>
       </div>
     </div>
   </div>
@@ -37,22 +33,25 @@ const MealFoodCard = ({ food, onClick }) => (
 const FoodCard = ({ food, onClick }) => (
   <div className="food-card glass-card" onClick={() => onClick(food)}>
     <div className="food-img-wrap">
-      <img
-        src={food.image} alt={food.name}
-        onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-      />
-      <div className="food-emoji-fb">{food.emoji || '🍽️'}</div>
-      <div className="food-overlay">
-        <span>📖 VIEW GUIDE</span>
-      </div>
+      <img src={food.image} alt={food.name} />
+      <div className="food-overlay">📖 VIEW NUTRITION GUIDE</div>
     </div>
     <div className="food-card-body">
       <h3 className="food-name">{food.name}</h3>
       <div className="food-macros-row">
-        <span className="mac protein-tag">{food.protein}g Protein</span>
-        <span className="mac cal-tag">{food.calories} kcal</span>
+        <div className="mac-pill protein">
+          <span className="m-val">{food.protein}g</span>
+          <span className="m-lbl">PRO</span>
+        </div>
+        <div className="mac-pill carbs">
+          <span className="m-val">{food.carbs}g</span>
+          <span className="m-lbl">CARB</span>
+        </div>
+        <div className="mac-pill cals">
+          <span className="m-val">{food.calories}</span>
+          <span className="m-lbl">KCAL</span>
+        </div>
       </div>
-      {food.quantity && <div className="qty-badge">📏 Suggested: {food.quantity}</div>}
     </div>
   </div>
 );
@@ -133,7 +132,7 @@ const Slide4 = ({ data }) => {
 
   const goalId = goal?.id || 'maintenance';
   const foods  = useMemo(() => getRecommendedFoods(diet, goalId), [diet, goalId]);
-  const meals  = useMemo(() => getMealPlan(proteinTarget, diet, goalId), [proteinTarget, diet, goalId]);
+  const meals  = useMemo(() => getMealPlan(data), [data]);
 
   const toggleMeal = (mealName) =>
     setExpandedMeal(prev => prev === mealName ? null : mealName);
@@ -200,8 +199,12 @@ const Slide4 = ({ data }) => {
                     </div>
                   </div>
                   <div className="meal-card-right">
-                    <span className="meal-protein-val" style={{ color: meta.color }}>{meal.protein}g</span>
-                    <span className="meal-protein-lbl">PROTEIN</span>
+                    <div className="meal-macros-summary">
+                      <div className="macro-mini">P: <span>{meal.protein}g</span></div>
+                      <div className="macro-mini">C: <span>{meal.carbs}g</span></div>
+                      <div className="macro-mini">F: <span>{meal.fat}g</span></div>
+                    </div>
+                    <span className="meal-protein-val" style={{ color: meta.color }}>{meal.calories} kcal</span>
                     <span className="meal-chevron" style={isOpen ? { transform: 'rotate(180deg)', color: meta.color } : {}}>▾</span>
                   </div>
                 </div>
@@ -255,21 +258,43 @@ const Slide4 = ({ data }) => {
         .s4-tab.active { background:var(--primary-color); border-color:var(--primary-color); color:#000; box-shadow: 0 4px 15px var(--primary-glow); }
         .s4-tab:hover:not(.active) { background:rgba(255,255,255,0.05); transform: translateY(-2px); }
 
-        .food-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px; margin-bottom:40px; }
-        .food-card { cursor:pointer; overflow:hidden; border-radius:24px; display: flex; flex-direction: column; transition: 0.4s; }
-        .food-card:hover { transform:translateY(-8px); border-color:var(--primary-color); box-shadow:var(--shadow-glow); }
-        .food-img-wrap { position:relative; height:150px; background:rgba(0,0,0,0.2); overflow: hidden; }
-        .food-img-wrap img { width:100%; height:100%; object-fit:cover; transition:0.5s; }
+        .food-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:24px; margin-bottom:40px; }
+        .food-card { cursor:pointer; overflow:hidden; border-radius:28px; display: flex; flex-direction: column; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(15, 23, 42, 0.2) !important; border: 1px solid rgba(255,255,255,0.05); }
+        .food-card:hover { transform:translateY(-10px); border-color:var(--primary-color); box-shadow: 0 15px 40px rgba(0, 255, 136, 0.1); }
+        .food-img-wrap { position:relative; height:180px; background:#000; overflow: hidden; }
+        .food-img-wrap img { width:100%; height:100%; object-fit:cover; transition:0.6s ease; }
         .food-card:hover .food-img-wrap img { transform:scale(1.1); }
-        .food-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:900; color:var(--primary-color); opacity:0; transition:0.3s; backdrop-filter: blur(2px); }
+        .food-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:900; color:var(--primary-color); opacity:0; transition:0.3s; backdrop-filter: blur(4px); }
         .food-card:hover .food-overlay { opacity:1; }
-        .food-card-body { padding:18px; flex: 1; display: flex; flex-direction: column; }
-        .food-name { font-size:1.1rem; font-weight:800; text-transform:capitalize; margin-bottom:12px; }
-        .food-macros-row { display:flex; gap:8px; margin-bottom:12px; }
-        .mac { font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:8px; }
-        .protein-tag { background:rgba(0,255,136,0.1); color:var(--primary-color); border: 1px solid rgba(0,255,136,0.2); }
-        .cal-tag     { background:rgba(255,255,255,0.05); color:var(--text-dim); }
-        .qty-badge   { font-size:0.75rem; color:var(--text-dim); font-weight:700; margin-top: auto; }
+        
+        .food-card-body { padding:24px; flex: 1; display: flex; flex-direction: column; }
+        .food-name { font-size:1.25rem; font-weight:800; text-transform:capitalize; margin-bottom:16px; color: #fff; }
+        
+        .food-macros-row { display:flex; gap:10px; margin-bottom:16px; }
+        .mac-pill { 
+          flex: 1; 
+          display: flex; 
+          flex-direction: column; 
+          align-items: center; 
+          padding: 8px 4px; 
+          border-radius: 12px; 
+          background: rgba(255,255,255,0.03); 
+          border: 1px solid rgba(255,255,255,0.05); 
+        }
+        
+        .mac-pill .m-val { font-size: 1rem; font-weight: 800; line-height: 1.2; }
+        .mac-pill .m-lbl { font-size: 0.55rem; font-weight: 900; color: var(--text-dim); letter-spacing: 0.5px; margin-top: 2px; }
+        
+        .mac-pill.protein { border-color: rgba(0, 255, 136, 0.3); background: rgba(0, 255, 136, 0.05); }
+        .mac-pill.protein .m-val { color: var(--primary-color); }
+        
+        .mac-pill.carbs { border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); }
+        .mac-pill.carbs .m-val { color: #3b82f6; }
+        
+        .mac-pill.cals { border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05); }
+        .mac-pill.cals .m-val { color: #f59e0b; }
+
+        .qty-badge { font-size:0.8rem; color:var(--text-dim); font-weight:700; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; margin-top: auto; }
 
         .meal-list { display:flex; flex-direction:column; gap:14px; margin-bottom:40px; }
         .meal-section { display:flex; flex-direction:column; }
@@ -286,7 +311,10 @@ const Slide4 = ({ data }) => {
         .meal-card-purpose { font-size:0.85rem; color:var(--text-dim); line-height: 1.4; display: flex; align-items: flex-start; gap: 10px; }
         .purpose-tag { font-size: 0.65rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; margin-top: 1px; }
         .meal-card-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
-        .meal-protein-val { font-size:1.8rem; font-weight:900; line-height:1; }
+        .meal-macros-summary { display: flex; gap: 8px; margin-bottom: 4px; }
+        .macro-mini { font-size: 0.65rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase; }
+        .macro-mini span { color: #fff; }
+        .meal-protein-val { font-size:1.4rem; font-weight:900; line-height:1; }
         .meal-protein-lbl { font-size:0.65rem; font-weight:800; color:var(--text-dim); letter-spacing:1px; }
 
         .meal-food-grid-wrap { background:rgba(255,255,255,0.02); border:1px solid var(--surface-border); border-top:none; border-radius:0 0 20px 20px; padding:24px; }

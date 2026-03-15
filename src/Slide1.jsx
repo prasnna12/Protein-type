@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { analyzeBodyImage } from './geminiService';
+import { useAuth } from './AuthContext';
 
 // Import physique images for recommendations
 import imgBulk from './assets/goal-bulk.png';
@@ -58,7 +59,8 @@ const ResultCard = ({ title, value, icon, delay, children, grade, symmetry }) =>
   );
 };
 
-const Slide1 = ({ next, setData }) => {
+const Slide1 = ({ next, setData, onLoginRequired }) => {
+  const { user } = useAuth();
   const [image, setImage] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -81,7 +83,7 @@ const Slide1 = ({ next, setData }) => {
   };
 
   const scanPhases = [
-    "INITIALIZING VISION CORE...",
+    "AI analyzing physique...",
     "SCANNING BODY TOPOLOGY...",
     "MAPPING MUSCLE DENSITY...",
     "CALCULATING SYMMETRY RATIOS...",
@@ -115,12 +117,73 @@ const Slide1 = ({ next, setData }) => {
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
       </svg>
+    ),
+    Dumbbell: () => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m2.121 7.757 1.415-1.414a2 2 0 1 0-2.829-2.829l-1.414 1.414a2 2 0 1 0 2.828 2.829z"/><path d="m8.121 13.757 1.415-1.414a2 2 0 1 0-2.829-2.829l-1.414 1.414a2 2 0 1 0 2.828 2.829z"/>
+      </svg>
+    ),
+    Zap: () => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+    ),
+    Target: () => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+      </svg>
+    ),
+    Brain: () => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9.5 2A5 5 0 0 1 12 7v5H7a5 5 0 0 1 2.5-10z"/><path d="M14.5 2A5 5 0 0 0 12 7v5h5a5 5 0 0 0-2.5-10z"/><path d="M9.5 22a5 5 0 0 0 2.5-5v-5H7a5 5 0 0 0 2.5 10z"/><path d="M14.5 22a5 5 0 0 1-2.5-5v-5h5a5 5 0 0 1-2.5 5z"/>
+      </svg>
+    ),
+    Scale: () => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m16 16 3-8 3 8c-.11.22-.53.31-1.14.31-1.14 0-1.5-.4-1.86-.44-.36.03-.72.44-1.86.44-.61 0-1.03-.09-1.14-.31Z"/><path d="m2 16 3-8 3 8c-.11.22-.53.31-1.14.31-1.14 0-1.5-.4-1.86-.44-.36.03-.72.44-1.86.44-.61 0-1.03-.09-1.14-.31Z"/><path d="M7 21h10"/><path d="M12 21V3"/><path d="M3 7h18"/>
+      </svg>
+    ),
+    Activity: () => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
     )
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+  const fitnessLines = [
+    { icon: <Icons.Dumbbell />, text: "Protein helps repair and build muscle tissue after workouts.", delay: 100 },
+    { icon: <Icons.Activity />, text: "Proper protein intake supports muscle growth and recovery.", delay: 200 },
+    { icon: <Icons.Zap />, text: "Your body needs protein to maintain strength and energy.", delay: 300 },
+    { icon: <Icons.Target />, text: "Different body goals like Bulk, Cut, or Maintain require different nutrition.", delay: 400 },
+    { icon: <Icons.Brain />, text: "AI analysis helps estimate your body condition and suggest the right diet.", delay: 500 },
+    { icon: <Icons.Scale />, text: "Balanced meals with protein, carbs, and nutrients improve health.", delay: 600 }
+  ];
+
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragging(true);
+    } else if (e.type === "dragleave") {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      processFile(file);
+    }
+  };
+
+  const processFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (event) => {
         setImage(event.target.result);
@@ -128,12 +191,22 @@ const Slide1 = ({ next, setData }) => {
         setError(null);
       };
       reader.readAsDataURL(file);
+    } else {
+      setError("Please upload a valid image file.");
     }
-    // Reset value so same file can be picked again
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) processFile(file);
     e.target.value = '';
   };
 
   const startScan = async () => {
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
     if (!image) return;
     setIsScanning(true);
     setScanProgress(0);
@@ -177,62 +250,115 @@ const Slide1 = ({ next, setData }) => {
 
   return (
     <div className={`slide-1-container stagger-in ${isResetting ? 'resetting' : ''}`}>
-      <div className="preview-hero">
-        <div className={`scan-panel ${image ? 'has-image' : ''} ${isScanning ? 'scanning' : ''}`}>
-          {!image ? (
-            <div className="upload-box glass-card" onClick={() => fileInputRef.current.click()}>
-              <div className="upload-icon">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                  <circle cx="12" cy="13" r="4"/>
-                </svg>
-              </div>
-              <h3>Analyze Your Physique</h3>
-              <p>Upload a front-view photo for AI analysis</p>
-              <input 
-                type="file" 
-                hidden 
-                ref={fileInputRef} 
-                onChange={handleImageUpload}
-                accept="image/*"
-              />
-            </div>
-          ) : (
-            <div className="image-display-wrapper">
-              <img src={image} alt="Physique" className="physique-preview-img" />
-              <div className="hero-glow-border"></div>
-              {isScanning && (
-                <div className="scan-overlay">
-                  <div className="scan-line"></div>
+      {!analysis && !isScanning && (
+        <div className="homepage-intro-section stagger-in">
+          <h1 className="hero-main-title">AI Fitness & <span className="text-gradient">Protein Analysis</span></h1>
+          <p className="hero-subtitle">Upload your photo and get AI-based body analysis and personalized nutrition suggestions to reach your peak physique.</p>
+        </div>
+      )}
+
+      <div className="hero-layout-wrapper">
+        <div className="preview-hero">
+          <div 
+            className={`scan-panel ${image ? 'has-image' : ''} ${isScanning ? 'scanning' : ''} ${isDragging ? 'drag-active' : ''}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            {!image ? (
+              <div 
+                className={`upload-box glass-card ${!user ? 'locked' : ''} ${isDragging ? 'active-drag' : ''}`} 
+                onClick={() => user ? fileInputRef.current.click() : onLoginRequired()}
+              >
+                <div className="upload-icon-animated">
+                  {user ? (
+                    <div className="icon-bounce">
+                      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="lock-icon-wrap">
+                      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    </div>
+                  )}
                 </div>
-              )}
-               {!isScanning && (
-                <button className="btn-reupload" onClick={resetScan}>
-                  Change Photo
-                </button>
-              )}
+                <h3>{user ? 'Drag & Drop or Click' : 'Analyze Your Physique'}</h3>
+                <p className="upload-hint">
+                  {user ? 'Upload a front-view physique photo for analysis' : 'Please login to unlock AI neural scan and diet planning.'}
+                </p>
+                {user && (
+                  <input 
+                    type="file" 
+                    hidden 
+                    ref={fileInputRef} 
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                  />
+                )}
+                {!user && <button className="btn-login-small glow-primary">Login to Access</button>}
+                
+                {isDragging && <div className="drag-overlay"><span>Drop Image Here</span></div>}
+              </div>
+            ) : (
+              <div className="image-display-wrapper">
+                <img src={image} alt="Physique" className="physique-preview-img" />
+                <div className="hero-glow-border"></div>
+                {isScanning && (
+                  <div className="scan-overlay">
+                    <div className="scan-line"></div>
+                  </div>
+                )}
+                {!isScanning && (
+                  <button className="btn-reupload" onClick={resetScan}>
+                    Change Photo
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {isScanning && (
+            <div className="loading-container glass-card stagger-in">
+              <div className="loading-header">
+                  <h3>{scanPhase}</h3>
+                  <span className="percent-text">{Math.round(scanProgress)}%</span>
+              </div>
+              <div className="progress-bar-bg">
+                <div className="progress-bar-fill" style={{ width: `${scanProgress}%` }}></div>
+              </div>
+              <p className="loading-hint">Performing deep neural scan of physiological markers</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="error-message glass-card stagger-in">
+              <div className="error-icon">⚠️</div>
+              <p>{error}</p>
+              <button className="btn-reupload" onClick={() => setError(null)} style={{position: 'relative', bottom: 0, marginTop: '15px'}}>Dismiss</button>
             </div>
           )}
         </div>
 
-        {isScanning && (
-          <div className="loading-container glass-card stagger-in">
-             <div className="loading-header">
-                <h3>{scanPhase}</h3>
-                <span className="percent-text">{Math.round(scanProgress)}%</span>
-             </div>
-             <div className="progress-bar-bg">
-               <div className="progress-bar-fill" style={{ width: `${scanProgress}%` }}></div>
-             </div>
-             <p className="loading-hint">Performing deep neural scan of physiological markers</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="error-message glass-card stagger-in">
-             <div className="error-icon">⚠️</div>
-             <p>{error}</p>
-             <button className="btn-reupload" onClick={() => setError(null)} style={{position: 'relative', bottom: 0, marginTop: '15px'}}>Dismiss</button>
+        {!analysis && !isScanning && (
+          <div className="fitness-info-sidebar stagger-in">
+            <h2 className="info-title">Why Protein <span className="text-gradient">Matters</span></h2>
+            <div className="info-cards-list">
+              {fitnessLines.map((line, idx) => (
+                <div 
+                  key={idx} 
+                  className="info-mini-card glass-card"
+                  style={{ animationDelay: `${line.delay}ms` }}
+                >
+                  <div className="info-icon-wrap">{line.icon}</div>
+                  <p>{line.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -310,6 +436,18 @@ const Slide1 = ({ next, setData }) => {
                     <span>WAIST</span>
                     <strong>{analysis.visualSignals?.waist}</strong>
                   </div>
+                  <div className="signal-item">
+                    <span>BODY FAT</span>
+                    <strong>{analysis.visualSignals?.bodyFat}</strong>
+                  </div>
+                  <div className="signal-item">
+                    <span>DEFINITION</span>
+                    <strong>{analysis.visualSignals?.definition}</strong>
+                  </div>
+                  <div className="signal-item">
+                    <span>POSTURE</span>
+                    <strong>{analysis.visualSignals?.posture}</strong>
+                  </div>
                 </div>
               </ResultCard>
 
@@ -329,7 +467,9 @@ const Slide1 = ({ next, setData }) => {
             <div className="summary-card glass-card reveal-delayed">
               <div className="summary-icon">✨</div>
               <div className="summary-content">
-                <h4>Bio-Insight</h4>
+                <h4>AI EXPLANATION</h4>
+                <p style={{fontStyle: 'italic', marginBottom: '10px'}}>{analysis.explanation}</p>
+                <h4>BIO-INSIGHT</h4>
                 <p>{analysis.summary}</p>
               </div>
             </div>
@@ -358,19 +498,137 @@ const Slide1 = ({ next, setData }) => {
           transform: translateY(10px);
         }
 
-        .preview-hero {
+        .homepage-intro-section {
+          text-align: center;
+          margin-bottom: 50px;
+          animation: fadeInDown 0.8s ease backwards;
+        }
+
+        .hero-main-title {
+          font-size: 3.5rem;
+          font-weight: 900;
+          letter-spacing: -1.5px;
+          margin-bottom: 15px;
+          line-height: 1.1;
+        }
+        .hero-subtitle {
+          color: var(--text-dim);
+          font-size: 1.1rem;
+          max-width: 650px;
+          margin: 0 auto;
+          line-height: 1.6;
+          font-weight: 500;
+        }
+
+        .hero-section {
+          padding-top: 40px;
+          display: grid;
+          grid-template-columns: 1.2fr 1fr;
+          gap: 60px;
+          align-items: center;
+        }
+
+        .hero-subtitle {
+          font-size: var(--fs-body);
+          color: var(--text-dim);
+          max-width: 500px;
+          margin-bottom: 40px;
+        }
+
+        .upload-container {
+          max-width: 500px;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .upload-box {
+          height: 250px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          cursor: pointer;
+          border: 2px dashed var(--surface-border);
+          transition: var(--transition-smooth);
+        }
+        .upload-box.dragging { border-color: var(--primary-color); background: rgba(6, 182, 212, 0.1); }
+        .upload-box:hover { border-color: var(--primary-color); transform: translateY(-5px); }
+
+        .upload-icon-wrap { font-size: 2.5rem; color: var(--primary-color); margin-bottom: 15px; }
+        .upload-box h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 8px; }
+        .upload-box p { font-size: 0.85rem; color: var(--text-dim); }
+
+        .upload-lock-card {
+          padding: 40px;
+          text-align: center;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 30px;
+          gap: 15px;
         }
+        .lock-icon { font-size: 3rem; margin-bottom: 10px; }
 
-        .scan-panel {
-          width: 320px;
-          height: 480px;
-          transition: all 0.5s ease;
-          position: relative;
+        .analysis-warning-banner {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          padding: 15px 20px;
+          background: rgba(239, 68, 68, 0.1) !important;
+          border-color: rgba(239, 68, 68, 0.3);
+          color: #fca5a5;
         }
+        .warning-icon { font-size: 1.2rem; }
+        .warning-text { font-size: 0.85rem; line-height: 1.4; }
+
+        .fitness-info-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+        .info-tip-card {
+          padding: 20px;
+          display: flex;
+          gap: 15px;
+          align-items: flex-start;
+          transition: var(--transition-smooth);
+        }
+        .info-tip-card:hover { transform: translateX(10px); border-color: var(--primary-color); }
+        .tip-icon { font-size: 1.5rem; }
+        .tip-content h4 { font-size: 0.9rem; font-weight: 800; margin-bottom: 4px; color: #fff; }
+        .tip-content p { font-size: 0.75rem; color: var(--text-dim); line-height: 1.4; }
+
+        .ai-loader {
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(255,255,255,0.1);
+          border-top-color: var(--primary-color);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 1100px) {
+          .hero-section { grid-template-columns: 1fr; gap: 60px; text-align: center; }
+          .hero-content { display: flex; flex-direction: column; align-items: center; }
+          .hero-subtitle { margin: 0 auto 40px auto; }
+          .fitness-info-grid { max-width: 700px; margin: 0 auto; }
+        }
+        @media (max-width: 600px) {
+          .fitness-info-grid { grid-template-columns: 1fr; }
+          .hero-main-title { font-size: 2.2rem; }
+        }
+        .upload-icon-animated {
+          color: var(--primary-color);
+          margin-bottom: 25px;
+          transition: 0.3s;
+        }
+        .icon-bounce { animation: bounce 2s infinite ease-in-out; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .upload-hint { color: var(--text-dim); font-size: 0.95rem; margin-top: 12px; max-width: 240px; line-height: 1.5; font-weight: 500; }
 
         .upload-box {
           width: 100%;
@@ -382,18 +640,59 @@ const Slide1 = ({ next, setData }) => {
           padding: 40px;
           text-align: center;
           cursor: pointer;
-          border: 2px dashed rgba(0, 255, 136, 0.2);
-          transition: var(--transition-smooth);
+          border: 2px dashed rgba(0, 255, 136, 0.25);
+          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          background: rgba(15, 23, 42, 0.4) !important;
         }
 
         .upload-box:hover {
           border-color: var(--primary-color);
-          background: rgba(0, 255, 136, 0.05);
-          transform: translateY(-5px);
+          background: rgba(0, 255, 136, 0.04) !important;
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: 0 20px 40px rgba(0, 255, 136, 0.08);
+        }
+
+        .upload-box.active-drag {
+          border-color: var(--primary-color);
+          background: rgba(0, 255, 136, 0.1) !important;
+          transform: scale(1.05);
+        }
+
+        .drag-overlay {
+          position: absolute;
+          inset: 10px;
+          border: 2px solid var(--primary-color);
+          border-radius: 20px;
+          background: rgba(0, 255, 136, 0.1);
+          backdrop-filter: blur(5px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 5;
+        }
+        .drag-overlay span { font-weight: 900; color: var(--primary-color); text-transform: uppercase; letter-spacing: 2px; }
+
+        .upload-box.locked { 
+          border-color: rgba(255,255,255,0.08); 
+          filter: grayscale(0.8);
+          opacity: 0.7;
+        }
+        .upload-box.locked:hover { border-color: var(--primary-color); filter: grayscale(0); opacity: 1; }
+        .lock-icon-wrap { color: var(--text-dim); opacity: 0.5; margin-bottom: 20px; }
+        .btn-login-small {
+          margin-top: 20px;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #fff;
+          padding: 8px 16px;
+          border-radius: 10px;
+          font-weight: 700;
+          font-size: 0.8rem;
+          cursor: pointer;
         }
 
         .upload-icon { color: var(--text-dim); margin-bottom: 24px; }
-        .upload-box p { color: var(--text-dim); font-size: 0.9rem; margin-top: 10px; }
+        .upload-box p { color: var(--text-dim); font-size: 0.9rem; margin-top: 10px; max-width: 200px; line-height: 1.4; }
 
         .image-display-wrapper {
           width: 100%;
@@ -524,9 +823,26 @@ const Slide1 = ({ next, setData }) => {
         .btn-reset-text { background: none; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 5px 15px; border-radius: 100px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.3s; }
         .btn-reset-text:hover { background: var(--primary-color); color: #000; box-shadow: 0 0 10px var(--primary-glow); }
 
+        @media (max-width: 1000px) {
+          .hero-layout-wrapper {
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+          }
+          .fitness-info-sidebar {
+            max-width: 100%;
+            text-align: center;
+          }
+          .info-mini-card {
+            text-align: left;
+          }
+        }
+
         @media (max-width: 768px) {
           .result-cards-grid { grid-template-columns: 1fr; }
           .scan-panel { width: 280px; height: 420px; }
+          .info-title { font-size: 1.5rem; }
+          .hero-layout-wrapper { gap: 30px; }
         }
       `}</style>
     </div>

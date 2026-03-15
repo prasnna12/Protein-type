@@ -98,51 +98,55 @@ export const getMealFoods = (mealName, diet) => {
 };
 
 
-export const getMealPlan = (proteinTarget, diet, goalId) => {
+export const getMealPlan = (userData) => {
+  const { proteinTarget, diet, goal, age, healthCondition, weight, gender } = userData;
+  const goalId = goal?.id || 'maintenance';
   const foodKeys = goalDietFoodMap[diet]?.[goalId] || goalDietFoodMap['vegetarian']['maintenance'];
-  const distribution = [0.25, 0.20, 0.15, 0.25, 0.15];
+  
+  // 6-meal distribution (including Snack)
+  const distribution = [0.22, 0.20, 0.10, 0.12, 0.22, 0.14];
+  
   const mealNames = [
-    { 
-      name: 'Breakfast',     
-      time: 'Within 1 hour after waking up', 
-      purpose: 'Start metabolism and provide morning energy',
-      icon: '🌅' 
-    },
-    { 
-      name: 'Lunch',         
-      time: '12:00 PM – 2:00 PM', 
-      purpose: 'Provide energy for the rest of the day',
-      icon: '☀️' 
-    },
-    { 
-      name: 'Pre-Workout',   
-      time: '30–60 minutes before workout', 
-      purpose: 'Provide energy and prevent muscle fatigue',
-      icon: '⚡' 
-    },
-    { 
-      name: 'Post-Workout',  
-      time: 'Within 30 minutes after workout', 
-      purpose: 'Muscle recovery and protein synthesis',
-      icon: '💪' 
-    },
-    { 
-      name: 'Dinner',        
-      time: '2–3 hours before sleep', 
-      purpose: 'Recovery and overnight muscle repair',
-      icon: '🌙' 
-    },
+    { name: 'Breakfast',     time: '08:00 AM', purpose: 'Kickstart morning metabolism', icon: '🌅' },
+    { name: 'Snack',         time: '11:00 AM', purpose: 'Maintain energy levels', icon: '🍎' },
+    { name: 'Lunch',         time: '01:30 PM', purpose: 'Main sustained energy', icon: '☀️' },
+    { name: 'Pre-Workout',   time: '04:30 PM', purpose: 'Fuel for performance', icon: '⚡' },
+    { name: 'Post-Workout',  time: '06:30 PM', purpose: 'Muscle repair/recovery', icon: '💪' },
+    { name: 'Dinner',        time: '09:00 PM', purpose: 'Overnight recovery', icon: '🌙' },
   ];
 
-  // Assign foods to meals — cycle through the food list
   return mealNames.map((m, i) => {
-    const foodKey = foodKeys[i % foodKeys.length];
-    const food = foodDb[foodKey] || {};
+    let foodKey = foodKeys[i % foodKeys.length];
+    
+    // Disease based adjustments
+    if (healthCondition === 'Diabetes') {
+      if (foodKey === 'rice') foodKey = 'brown rice';
+      if (foodKey === 'banana' || foodKey === 'dates') foodKey = 'oats';
+      if (m.name === 'Snack') foodKey = 'almonds';
+    } else if (healthCondition === 'High Blood Pressure') {
+      if (m.name === 'Snack') foodKey = 'banana'; // Potassium rich
+      if (foodKey === 'paneer') foodKey = 'fish' || 'tofu';
+    }
+
+    const food = foodDb[foodKey] || foodDb['oats'];
+    const portionMultiplier = (proteinTarget * distribution[i]) / food.protein;
+    
+    // Add beginner friendly explanation
+    let explanation = `This provides high-quality ${food.diet === 'vegetarian' ? 'plant' : 'animal'} protein. `;
+    if (foodKey === 'egg whites') explanation += "Low fat, high protein choice.";
+    if (foodKey === 'oats') explanation += "Complex carbs for sustained energy.";
+    if (foodKey === 'paneer') explanation += "Casein protein for slow digestion.";
+
     return {
       ...m,
       protein: Math.round(proteinTarget * distribution[i]),
+      carbs: Math.round(food.carbs * portionMultiplier),
+      fat: Math.round(food.fat * portionMultiplier),
+      calories: Math.round(food.calories * portionMultiplier),
       food: foodKey,
+      explanation,
       foodEmoji: food.emoji || '🍽️',
+      foodDetails: { ...food, name: foodKey }
     };
   });
 };

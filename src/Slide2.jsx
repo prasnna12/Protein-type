@@ -8,13 +8,23 @@ import imgMaintenance from './assets/goal-maintenance.png';
 const Slide2 = ({ next, setData, data }) => {
   const [selectedGoal, setSelectedGoal] = useState(data.goal || null);
   const [weight, setWeight] = useState(data.weight || 80);
+  const [age, setAge] = useState(data.age || 25);
+  const [gender, setGender] = useState(data.gender || 'Male');
+  const [activityLevel, setActivityLevel] = useState(data.activityLevel || 'Moderately Active');
+  const [healthCondition, setHealthCondition] = useState(data.healthCondition || 'Normal');
+
+  const activityLevels = [
+    { title: 'Sedentary', desc: 'Little exercise' },
+    { title: 'Moderate', desc: 'Exercise 3-5 days/week' },
+    { title: 'Active', desc: 'Exercise 6-7 days/week' },
+    { title: 'Athlete', desc: 'Professional training' }
+  ];
 
   const goals = [
-    { id: 'bulk',        title: 'Bulk',        multiplier: 2.0, img: imgBulk,        desc: 'Maximize muscle growth with a calculated calorie surplus.' },
-    { id: 'lean_bulk',   title: 'Lean Bulk',   multiplier: 1.8, img: imgLeanBulk,   desc: 'Build quality muscle while strictly minimizing body fat gain.' },
-    { id: 'cut',         title: 'Cut',         multiplier: 2.2, img: imgCut,         desc: 'Shred body fat while preserving your hard-earned muscle mass.' },
-    { id: 'fat_loss',    title: 'Fat Loss',    multiplier: 2.3, img: imgFatLoss,    desc: 'Aggressive fat loss focusing on metabolic health and protein safety.' },
-    { id: 'maintenance', title: 'Maintenance', multiplier: 1.5, img: imgMaintenance, desc: 'Maintain your current physique while optimizing performance.' }
+    { id: 'bulk',        title: 'Bulk',        multiplier: { Male: 2.0, Female: 1.8 }, img: imgBulk,        desc: 'Maximize muscle growth.' },
+    { id: 'lean_bulk',   title: 'Lean Bulk',   multiplier: { Male: 1.8, Female: 1.6 }, img: imgLeanBulk,   desc: 'Build muscle, minimize fat.' },
+    { id: 'cut',         title: 'Cut',         multiplier: { Male: 2.2, Female: 1.9 }, img: imgCut,         desc: 'Shred fat, keep muscle.' },
+    { id: 'maintenance', title: 'Maintenance', multiplier: { Male: 1.6, Female: 1.4 }, img: imgMaintenance, desc: 'Optimize performance.' }
   ];
 
   // Auto-highlighting based on AI analysis
@@ -36,11 +46,16 @@ const Slide2 = ({ next, setData, data }) => {
 
   const handleContinue = () => {
     if (selectedGoal) {
-      const proteinTarget = weight * selectedGoal.multiplier;
+      const mult = selectedGoal.multiplier[gender];
+      const proteinTarget = weight * mult;
       setData(prev => ({
         ...prev,
         goal: selectedGoal,
         weight: Number(weight),
+        age: Number(age),
+        gender: gender,
+        activityLevel: activityLevel,
+        healthCondition: healthCondition,
         proteinTarget: Math.round(proteinTarget)
       }));
       next();
@@ -56,32 +71,99 @@ const Slide2 = ({ next, setData, data }) => {
   return (
     <div className="slide-2-container glass-card stagger-in">
       <div className="s2-header">
-        <h1 className="text-gradient">Choose Your Fitness Goal</h1>
-        <p className="subtitle">Select the outcome you want to achieve based on your current physique and targets.</p>
+        <h1 className="hero-main-title">Personalize Your <span className="text-gradient">AI Profile</span></h1>
+        <p className="subtitle">Tell us about your current status to calculate perfect targets.</p>
       </div>
 
-      <div className="weight-input-section glass-card">
-        <div className="weight-header">
-          <label>1. Enter Current Weight (KG)</label>
-          <span className="weight-val">{weight} kg</span>
-        </div>
-        <div className="slider-wrap">
-          <input 
-            type="range" 
-            min="30" 
-            max="180" 
-            step="1"
-            className="weight-slider"
-            value={weight} 
-            onChange={(e) => setWeight(e.target.value)} 
-          />
-          <div className="slider-labels">
-            <span>30kg</span>
-            <span>105kg</span>
-            <span>180kg</span>
-          </div>
+      <div className="input-section glass-card">
+        <div className="input-grid">
+           {/* Gender Selection */}
+           <div className="input-field-group">
+             <label className="field-label">GENDER</label>
+             <div className="gender-toggle-group">
+               {['Male', 'Female'].map(g => (
+                 <button 
+                   key={g}
+                   className={`gender-btn ${gender === g ? 'active' : ''}`}
+                   onClick={() => setGender(g)}
+                 >
+                   {g === 'Male' ? '👨 Male' : '👩 Female'}
+                 </button>
+               ))}
+             </div>
+           </div>
+
+           <div className="input-field-group">
+             <div className="weight-header">
+               <label className="field-label">AGE (YEARS)</label>
+             </div>
+             <input 
+               type="number"
+               className="modern-input"
+               value={age}
+               onChange={(e) => setAge(e.target.value)}
+               min="10"
+               max="100"
+               placeholder="Enter your age"
+             />
+           </div>
+
+           <div className="input-field-group">
+             <div className="weight-header">
+               <label className="field-label">WEIGHT (KG)</label>
+               <span className="weight-val">{weight} kg</span>
+             </div>
+             <div className="slider-wrap">
+               <input 
+                 type="range" 
+                 min="30" 
+                 max="180" 
+                 step="1"
+                 className="weight-slider"
+                 value={weight} 
+                 onChange={(e) => setWeight(e.target.value)} 
+               />
+               <div className="slider-labels">
+                 <span>30kg</span>
+                 <span>180kg</span>
+               </div>
+             </div>
+           </div>
+
+           <div className="input-field-group">
+             <div className="weight-header">
+               <label className="field-label">ACTIVITY</label>
+             </div>
+             <select 
+               className="modern-input"
+               value={activityLevel}
+               onChange={(e) => setActivityLevel(e.target.value)}
+             >
+               {activityLevels.map(al => (
+                 <option key={al.title} value={al.title}>{al.title}</option>
+               ))}
+             </select>
+           </div>
+
+           <div className="input-field-group full-width">
+             <div className="weight-header">
+               <label className="field-label">HEALTH CONDITION</label>
+             </div>
+             <div className="health-chips">
+               {['Healthy', 'Diabetes', 'High Blood Pressure', 'Thyroid', 'Other'].map(hc => (
+                 <button 
+                  key={hc} 
+                  className={`chip ${healthCondition === hc ? 'active' : ''}`}
+                  onClick={() => setHealthCondition(hc)}
+                 >
+                   {hc}
+                 </button>
+               ))}
+             </div>
+           </div>
         </div>
       </div>
+     
 
       <div className="goals-label">2. Select Your Path</div>
       <div className="goals-grid stagger-in">
@@ -138,22 +220,66 @@ const Slide2 = ({ next, setData, data }) => {
         .s2-header { text-align: center; margin-bottom: 40px; }
         .subtitle { color: var(--text-dim); font-size: 1rem; margin-top: 8px; }
 
-        .weight-input-section {
+        .input-section {
           background: rgba(255,255,255,0.02);
-          padding: 24px 30px;
+          padding: 30px;
           margin-bottom: 40px;
-          border-radius: 20px;
+          border-radius: 24px;
           border-color: rgba(255,255,255,0.05);
+        }
+        .input-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 30px;
+        }
+        .input-field-group {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
         }
         .weight-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 20px;
+          margin-bottom: 10px;
+          height: 100%;
         }
-        .weight-header label { font-weight: 700; font-size: 0.9rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+        .weight-header label { 
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 700; 
+          font-size: 0.9rem; 
+          color: var(--text-dim); 
+          text-transform: uppercase; 
+          letter-spacing: 0.5px; 
+        }
+        .input-icon { font-size: 1.2rem; }
         .weight-val { font-size: 1.5rem; font-weight: 800; color: var(--primary-color); }
         
+        .modern-input {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--surface-border);
+          color: #fff;
+          padding: 12px 20px;
+          border-radius: 14px;
+          font-family: inherit;
+          font-size: 1rem;
+          font-weight: 600;
+          outline: none;
+          transition: var(--transition-smooth);
+          width: 100%;
+        }
+        .modern-input:focus {
+          border-color: var(--primary-color);
+          background: rgba(0, 255, 136, 0.05);
+          box-shadow: 0 0 15px var(--primary-glow);
+        }
+        select.modern-input option {
+          background: #0f172a;
+          color: #fff;
+        }
+
         .weight-slider {
           -webkit-appearance: none;
           width: 100%;
@@ -298,10 +424,65 @@ const Slide2 = ({ next, setData, data }) => {
           .goals-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        @media (max-width: 650px) {
-          .goals-grid { grid-template-columns: 1fr; }
-          .action-footer { flex-direction: column; gap: 24px; text-align: center; }
-          .slide-2-container { padding: 30px 20px; }
+        .gender-toggle-group {
+          display: flex;
+          gap: 12px;
+        }
+        .gender-btn {
+          flex: 1;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid var(--surface-border);
+          color: var(--text-dim);
+          padding: 12px;
+          border-radius: 12px;
+          cursor: pointer;
+          font-weight: 700;
+          transition: var(--transition-smooth);
+        }
+        .gender-btn.active {
+          background: rgba(6, 182, 212, 0.1);
+          border-color: var(--primary-color);
+          color: var(--primary-color);
+          box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .field-label {
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: var(--text-dim);
+          letter-spacing: 1px;
+          margin-bottom: 8px;
+          display: block;
+        }
+
+        .health-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        .chip {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid var(--surface-border);
+          color: var(--text-dim);
+          padding: 8px 16px;
+          border-radius: 100px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: var(--transition-smooth);
+        }
+        .chip.active {
+          background: var(--primary-color);
+          color: #000;
+          border-color: var(--primary-color);
+          box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .full-width { grid-column: span 2; }
+
+        @media (max-width: 768px) {
+          .input-grid { grid-template-columns: 1fr; }
+          .full-width { grid-column: span 1; }
         }
       `}</style>
     </div>
