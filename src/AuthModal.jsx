@@ -9,6 +9,7 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
       setIsLogin(initialTab === 'login');
     }
   }, [isOpen, initialTab]);
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -55,59 +56,93 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="auth-modal glass-card" onClick={(e) => e.stopPropagation()}>
+      <div className="auth-modal-container glass-card" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>&times;</button>
         
-        <div className="auth-tabs">
-          <button 
-            className={`auth-tab ${isLogin ? 'active' : ''}`} 
-            onClick={() => setIsLogin(true)}
-          >
-            Login
-          </button>
-          <button 
-            className={`auth-tab ${!isLogin ? 'active' : ''}`} 
-            onClick={() => setIsLogin(false)}
-          >
-            Signup
-          </button>
-        </div>
-
-        <div className="auth-body">
-          <h2>{isLogin ? 'Welcome Back' : 'Join Protein.in AI'}</h2>
-          <p className="auth-subtitle">
-            {isLogin ? 'Enter your details to track your progress' : 'Create an account to unlock AI analysis'}
-          </p>
-
-          <form onSubmit={handleSubmit} className="auth-form">
-            {error && <div className="auth-error-msg">{error}</div>}
-            
-            {!isLogin && (
-              <div className="input-group">
-                <label>Full Name</label>
-                <input 
-                  type="text" 
-                  placeholder="John Doe" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required={!isLogin}
-                />
+        <div className="auth-split-layout">
+          {/* Left Side: Fitness Info */}
+          <div className="auth-info-side">
+            <div className="info-overlay"></div>
+            <div className="info-content">
+              <div className="badge-modern">PREMIUM AI FITNESS</div>
+              <h2>AI Fitness & Nutrition Guide</h2>
+              <div className="info-lines">
+                <div className="info-line">
+                  <span className="info-icon">🥩</span>
+                  <p>Protein is essential for building and repairing muscles after workouts.</p>
+                </div>
+                <div className="info-line">
+                  <span className="info-icon">💪</span>
+                  <p>A balanced diet with proper protein intake helps improve strength and body composition.</p>
+                </div>
+                <div className="info-line">
+                  <span className="info-icon">🥗</span>
+                  <p>Regular workouts combined with smart nutrition can transform your health and fitness.</p>
+                </div>
               </div>
-            )}
+              
+              <div className="feature-pills">
+                <span className="pill">💪 Fitness</span>
+                <span className="pill">🥩 Protein</span>
+                <span className="pill">🥗 Healthy Eating</span>
+                <span className="pill">📊 Body Analysis</span>
+              </div>
+            </div>
+          </div>
 
-            <div className="input-group">
-              <label>Email Address</label>
-              <input 
-                type="email" 
-                placeholder="name@example.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+          {/* Right Side: Auth Form */}
+          <div className="auth-form-side">
+            <div className="auth-form-header">
+              <div className="auth-tabs-modern">
+                <button 
+                  className={`auth-tab-btn ${isLogin ? 'active' : ''}`} 
+                  onClick={() => setIsLogin(true)}
+                >
+                  Login
+                </button>
+                <button 
+                  className={`auth-tab-btn ${!isLogin ? 'active' : ''}`} 
+                  onClick={() => setIsLogin(false)}
+                >
+                  Sign Up
+                </button>
+              </div>
+              <h1>{isLogin ? 'Login to Continue' : 'Create Account'}</h1>
+              <p className="auth-desc">
+                {isLogin 
+                  ? "Create an account to unlock AI body analysis and personalized nutrition plans."
+                  : "Join us to get your personalized AI-driven fitness strategy today."}
+              </p>
             </div>
 
-            <div className="input-grid-auth">
-              <div className="input-group">
+            <form onSubmit={handleSubmit} className="auth-form-modern">
+              {error && <div className="auth-error-banner">{error}</div>}
+              
+              {!isLogin && (
+                <div className="modern-input-group">
+                  <label>Full Name</label>
+                  <input 
+                    type="text" 
+                    placeholder="John Doe" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required={!isLogin}
+                  />
+                </div>
+              )}
+
+              <div className="modern-input-group">
+                <label>Email Address</label>
+                <input 
+                  type="email" 
+                  placeholder="name@example.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="modern-input-group">
                 <label>Password</label>
                 <input 
                   type="password" 
@@ -119,7 +154,7 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
               </div>
 
               {!isLogin && (
-                <div className="input-group">
+                <div className="modern-input-group">
                   <label>Confirm Password</label>
                   <input 
                     type="password" 
@@ -130,26 +165,26 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                   />
                 </div>
               )}
+
+              <button type="submit" className="btn-primary-modern" disabled={loading}>
+                {loading ? 'Processing...' : (isLogin ? 'Login Now' : 'Sign Up')}
+              </button>
+            </form>
+
+            <div className="auth-divider-modern">
+              <span>OR</span>
             </div>
 
-            <button type="submit" className="btn-primary auth-submit-btn" disabled={loading}>
-              {loading ? 'Processing...' : (isLogin ? 'Login Now' : 'Create Account')}
+            <button className="btn-google-modern" onClick={handleGoogleSignIn}>
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1 .67-2.28 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              Google
             </button>
-          </form>
-
-          <div className="auth-divider">
-            <span>OR CONTINUE WITH</span>
           </div>
-
-          <button className="btn-google-auth" onClick={handleGoogleSignIn}>
-            <svg width="20" height="20" viewBox="0 0 24 24">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1 .67-2.28 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Sign in with Google
-          </button>
         </div>
       </div>
 
@@ -157,152 +192,243 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(8px);
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(12px);
           z-index: 1000;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 20px;
-          animation: fadeIn 0.3s ease;
+          padding: 24px;
+          animation: modalFadeIn 0.3s ease;
         }
 
-        .auth-modal {
+        .auth-modal-container {
           width: 100%;
-          max-width: 480px;
+          max-width: 1000px;
+          min-height: 600px;
+          background: #0f172a !important;
           border-radius: 32px;
           overflow: hidden;
           position: relative;
-          background: rgba(15, 23, 42, 0.8) !important;
-          animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          display: flex;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
         .modal-close {
           position: absolute;
-          top: 20px;
-          right: 20px;
+          top: 24px;
+          right: 24px;
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.1);
           color: #fff;
-          width: 32px;
-          height: 32px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          font-size: 20px;
-          z-index: 10;
+          font-size: 24px;
+          z-index: 100;
           transition: 0.3s;
         }
         .modal-close:hover { background: rgba(255, 77, 77, 0.2); border-color: #ff4d4d; color: #ff4d4d; }
 
-        .auth-tabs {
+        .auth-split-layout {
           display: flex;
-          background: rgba(255,255,255,0.03);
-          border-bottom: 1px solid rgba(255,255,255,0.05);
+          width: 100%;
         }
-        .auth-tab {
-          flex: 1;
-          padding: 20px;
-          background: none;
+
+        /* Info Side */
+        .auth-info-side {
+          flex: 1.1;
+          padding: 60px;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          background: url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop') center/cover;
+        }
+        .info-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(6, 182, 212, 0.4) 100%);
+          z-index: 1;
+        }
+        .info-content { position: relative; z-index: 2; }
+        
+        .badge-modern {
+          display: inline-block;
+          background: rgba(6, 182, 212, 0.2);
+          color: var(--primary-color);
+          padding: 6px 14px;
+          border-radius: 100px;
+          font-size: 0.7rem;
+          font-weight: 800;
+          letter-spacing: 2px;
+          margin-bottom: 24px;
+          border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .info-content h2 {
+          font-size: 2.5rem;
+          font-weight: 900;
+          line-height: 1.2;
+          margin-bottom: 32px;
+          background: linear-gradient(to right, #fff, rgba(255,255,255,0.7));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .info-lines { display: flex; flex-direction: column; gap: 24px; margin-bottom: 40px; }
+        .info-line { display: flex; gap: 16px; align-items: flex-start; }
+        .info-icon { font-size: 1.5rem; line-height: 1.4; }
+        .info-line p { color: rgba(255,255,255,0.8); font-size: 1rem; line-height: 1.6; }
+
+        .feature-pills { display: flex; flex-wrap: wrap; gap: 12px; }
+        .pill {
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          padding: 8px 16px;
+          border-radius: 100px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #fff;
+        }
+
+        /* Form Side */
+        .auth-form-side {
+          flex: 0.9;
+          padding: 60px;
+          background: #0f172a;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .auth-form-header { margin-bottom: 32px; }
+        .auth-tabs-modern {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 24px;
+          background: rgba(255,255,255,0.03);
+          padding: 6px;
+          border-radius: 14px;
+          width: fit-content;
+        }
+        .auth-tab-btn {
+          padding: 10px 24px;
+          border-radius: 10px;
           border: none;
+          background: none;
           color: var(--text-dim);
           font-weight: 700;
-          font-size: 0.9rem;
+          font-size: 0.85rem;
           cursor: pointer;
           transition: 0.3s;
-          position: relative;
         }
-        .auth-tab.active { color: var(--primary-color); }
-        .auth-tab.active::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 2px;
-          background: var(--primary-color);
-          box-shadow: 0 0 10px var(--primary-glow);
+        .auth-tab-btn.active {
+          background: rgba(6, 182, 212, 0.1);
+          color: var(--primary-color);
         }
 
-        .auth-body { padding: 40px; }
-        .auth-body h2 { font-size: 1.8rem; margin-bottom: 8px; color: #fff; }
-        .auth-subtitle { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 30px; }
+        .auth-form-header h1 { font-size: 2rem; margin-bottom: 12px; font-weight: 800; }
+        .auth-desc { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
 
-        .auth-form { display: flex; flex-direction: column; gap: 20px; }
-        .auth-error-msg {
+        .auth-form-modern { display: flex; flex-direction: column; gap: 20px; }
+        .auth-error-banner {
           background: rgba(255, 77, 77, 0.1);
           border: 1px solid rgba(255, 77, 77, 0.2);
           color: #ff4d4d;
-          padding: 12px;
+          padding: 12px 16px;
           border-radius: 12px;
           font-size: 0.85rem;
           font-weight: 600;
         }
 
-        .input-group label {
+        .modern-input-group label {
           display: block;
-          font-size: 0.75rem;
+          font-size: 0.7rem;
           font-weight: 800;
           color: var(--text-dim);
-          margin-bottom: 8px;
           text-transform: uppercase;
           letter-spacing: 1px;
+          margin-bottom: 8px;
         }
-        .input-group input {
+        .modern-input-group input {
           width: 100%;
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid var(--surface-border);
-          border-radius: 14px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.1);
           padding: 14px 18px;
+          border-radius: 14px;
           color: #fff;
-          font-family: inherit;
           transition: 0.3s;
         }
-        .input-group input:focus {
+        .modern-input-group input:focus {
           outline: none;
           border-color: var(--primary-color);
-          background: rgba(255, 255, 255, 0.08);
-          box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.05);
+          background: rgba(255,255,255,0.07);
+          box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
         }
 
-        .input-grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media (max-width: 480px) { .input-grid-auth { grid-template-columns: 1fr; } }
+        .btn-primary-modern {
+          margin-top: 12px;
+          padding: 16px;
+          border-radius: 14px;
+          border: none;
+          background: var(--primary-color);
+          color: #000;
+          font-weight: 800;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: 0.3s;
+        }
+        .btn-primary-modern:hover { transform: translateY(-2px); box-shadow: 0 10px 20px var(--primary-glow); }
+        .btn-primary-modern:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .auth-submit-btn { width: 100%; padding: 16px; border-radius: 14px; margin-top: 10px; font-weight: 800; }
-
-        .auth-divider {
+        .auth-divider-modern {
           display: flex;
           align-items: center;
-          gap: 15px;
-          margin: 30px 0;
-          color: rgba(255,255,255,0.15);
-          font-size: 0.65rem;
+          gap: 16px;
+          margin: 24px 0;
+          color: var(--text-dim);
+          font-size: 0.7rem;
           font-weight: 800;
-          letter-spacing: 1px;
         }
-        .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+        .auth-divider-modern::before, .auth-divider-modern::after {
+          content: '';
+          flex: 1;
+          height: 1px;
+          background: rgba(255,255,255,0.05);
+        }
 
-        .btn-google-auth {
-          width: 100%;
+        .btn-google-modern {
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 12px;
+          padding: 14px;
+          border-radius: 14px;
           background: #fff;
           color: #000;
           border: none;
-          padding: 14px;
-          border-radius: 14px;
           font-weight: 700;
+          font-size: 0.95rem;
           cursor: pointer;
           transition: 0.3s;
         }
-        .btn-google-auth:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .btn-google-modern:hover { background: #f8fafc; transform: translateY(-1px); }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @media (max-width: 960px) {
+          .auth-modal-container { max-width: 500px; }
+          .auth-info-side { display: none; }
+          .auth-form-side { flex: 1; padding: 40px; }
+        }
+
+        @keyframes modalFadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
     </div>
   );

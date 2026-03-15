@@ -1,18 +1,56 @@
 import { useState } from 'react'
 import './index.css'
-import Slide1 from './Slide1'
-import Slide2 from './Slide2'
-import SlideDiet from './SlideDiet'
-import Slide3 from './Slide3'
-import Slide4 from './Slide4'
+import SlideHome from './SlideHome'
+import SlideProfile from './SlideProfile'
+import SlideScan from './SlideScan'
+import SlideGoal from './SlideGoal'
+import SlideReport from './SlideReport'
+import SlidePlan from './SlidePlan'
 import Footer from './Footer'
 import { useAuth } from './AuthContext'
 import AuthModal from './AuthModal'
+import SlideTips from './SlideTips'
+import React from 'react'
 
-const TOTAL_SLIDES = 5;
+// ── GLOBAL ERROR BOUNDARY ──────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error, errorInfo) {
+    console.error("APP CRITICAL ERROR:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-fallback glass-card">
+          <h2>Something went wrong. Please try again.</h2>
+          <p>The page you tried to access is not available or encountered a neural glitch.</p>
+          <button className="btn-primary" onClick={() => window.location.reload()}>Refresh Platform</button>
+          <style>{`
+            .error-fallback {
+              margin: 100px auto;
+              max-width: 500px;
+              padding: 40px;
+              text-align: center;
+              border: 1px solid rgba(248, 113, 113, 0.3);
+              background: rgba(15, 23, 42, 0.8);
+            }
+            .error-fallback h2 { color: #f87171; margin-bottom: 20px; font-weight: 900; }
+          `}</style>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const TOTAL_SLIDES = 6;
 
 const BackIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/>
   </svg>
 );
@@ -41,25 +79,56 @@ const CloseIcon = () => (
   </svg>
 );
 
+const LogoIcon = () => (
+  <div className="logo-icon-wrap">
+    <NavIcon />
+  </div>
+);
+
+const BrandingTag = () => (
+  <span className="branding-tag">@prasnnacreativity</span>
+);
+
 function App() {
   const { user, logout } = useAuth();
+  useEffect(() => {
+    const handleOnline = () => alert("Connection Restored.");
+    const handleOffline = () => alert("Network issue detected. Please check your internet connection.");
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const [currentSlide, setCurrentSlide] = useState(1);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authTab, setAuthTab] = useState('login');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userData, setUserData] = useState({
+    weight: '',
+    gender: '',
+    diet: 'vegetarian',
+    healthCondition: 'None',
     photo: null,
     analysis: null,
     goal: null,
-    diet: null,
     proteinTarget: 0,
     meals: []
   });
 
   const nextSlide = () => setCurrentSlide(prev => Math.min(prev + 1, TOTAL_SLIDES));
   const prevSlide = () => setCurrentSlide(prev => Math.max(prev - 1, 1));
+  
+  // BROKEN LINK PROTECTION: Validates slide range
   const goToSlide = (slide) => {
-    setCurrentSlide(slide);
+    if (slide < 1 || slide > TOTAL_SLIDES) {
+      console.warn(`Invalid slide ${slide} requested. Redirecting to Home.`);
+      setCurrentSlide(1);
+    } else {
+      setCurrentSlide(slide);
+    }
     setIsMobileMenuOpen(false);
   };
 
@@ -70,15 +139,28 @@ function App() {
   };
 
   const renderSlide = () => {
+    // Data Integrity Redirects
+    if (currentSlide > 1 && !userData.photo) {
+      setTimeout(() => setCurrentSlide(1), 0);
+      return <SlideHome next={nextSlide} setData={setUserData} onLoginRequired={() => openAuth('login')} user={user} />;
+    }
+    if (currentSlide > 2 && !userData.analysis) {
+      setTimeout(() => setCurrentSlide(2), 0);
+      return <SlideScan next={nextSlide} data={userData} setData={setUserData} />;
+    }
+
     switch(currentSlide) {
-      case 1: return <Slide1 next={nextSlide} setData={setUserData} onLoginRequired={() => openAuth('login')} />;
-      case 2: return <Slide2 next={nextSlide} prev={prevSlide} setData={setUserData} data={userData} />;
-      case 3: return <SlideDiet next={nextSlide} prev={prevSlide} setData={setUserData} />;
-      case 4: return <Slide3 next={nextSlide} prev={prevSlide} data={userData} />;
-      case 5: return <Slide4 prev={prevSlide} data={userData} />;
-      default: return <Slide1 next={nextSlide} setData={setUserData} onLoginRequired={() => openAuth('login')} />;
+      case 1: return <SlideHome next={nextSlide} setData={setUserData} onLoginRequired={() => openAuth('login')} user={user} />;
+      case 2: return <SlideScan next={nextSlide} data={userData} setData={setUserData} />;
+      case 3: return <SlideProfile next={nextSlide} setData={setUserData} data={userData} />;
+      case 4: return <SlideGoal next={nextSlide} data={userData} setData={setUserData} />;
+      case 5: return <SlideReport next={nextSlide} data={userData} setData={setUserData} />;
+      case 6: return <SlidePlan data={userData} />;
+      default: return <SlideHome next={nextSlide} setData={setUserData} onLoginRequired={() => openAuth('login')} user={user} />;
     }
   };
+
+  const slideLabels = ['Home / Upload', 'AI Scanning', 'Analysis Dashboard', 'Goal Selection', 'Health Report', 'Nutrition Plan'];
 
   return (
     <div className="page-root">
@@ -86,9 +168,11 @@ function App() {
         <div className="header-inner">
           <div className="header-left">
             <div className="logo-section" onClick={() => goToSlide(1)}>
-              <div className="logo-icon-wrap">
-                <NavIcon />
+              <div className="logo-wrapper">
+                <LogoIcon />
+                <BrandingTag />
               </div>
+              <div className="divider"></div>
               <div className="logo-text">
                 <span className="logo-title text-gradient">Protein.in AI</span>
                 <span className="logo-tag">SMART NUTRITION AI</span>
@@ -99,8 +183,8 @@ function App() {
           <nav className={`header-center ${isMobileMenuOpen ? 'mobile-active' : ''}`}>
             <ul className="nav-menu">
               <li><button onClick={() => goToSlide(1)} className={currentSlide === 1 ? 'active' : ''}>Home</button></li>
-              <li><button onClick={() => goToSlide(1)} className={currentSlide === 1 ? 'active' : ''}>AI Analysis</button></li>
-              <li><button onClick={() => goToSlide(3)} className={currentSlide === 3 ? 'active' : ''}>Diet Plan</button></li>
+              <li><button onClick={() => goToSlide(3)} className={currentSlide === 3 ? 'active' : ''}>AI Analysis</button></li>
+              <li><button onClick={() => goToSlide(5)} className={currentSlide === 5 ? 'active' : ''}>Report</button></li>
             </ul>
           </nav>
 
@@ -128,6 +212,13 @@ function App() {
         </div>
       </header>
 
+      {currentSlide > 1 && (
+        <button className="global-back-btn glass-card slide-in-left" onClick={prevSlide}>
+          <BackIcon />
+          <span>Back</span>
+        </button>
+      )}
+
       <div className="app-main-content">
         <div className="app-container">
           <div className="slide-progress-bar">
@@ -135,7 +226,7 @@ function App() {
                <div className="progress-fill" style={{ width: `${(currentSlide / TOTAL_SLIDES) * 100}%` }}></div>
              </div>
              <div className="progress-steps-label">
-                STEP {currentSlide} OF {TOTAL_SLIDES}: {['Home', 'Goal', 'Diet', 'Report', 'Plan'][currentSlide - 1].toUpperCase()}
+                STEP {currentSlide} OF {TOTAL_SLIDES}: {slideLabels[currentSlide - 1].toUpperCase()}
              </div>
           </div>
 
@@ -193,21 +284,49 @@ function App() {
         }
         .header-left .logo-section:hover { transform: translateY(-1px); }
 
+        .logo-wrapper { display: flex; align-items: center; gap: 10px; position: relative; cursor: pointer; }
+        .branding-tag {
+          font-size: 0.7rem;
+          font-weight: 950;
+          color: #fff;
+          background: linear-gradient(90deg, #00ffcc, #06b6d4, #00ffcc);
+          background-size: 200% auto;
+          padding: 6px 16px;
+          border-radius: 100px;
+          box-shadow: 0 0 25px rgba(0, 255, 136, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2);
+          animation: brandingShimmer 3s linear infinite, brandingPulse 1.5s ease-in-out infinite alternate;
+          border: 1px solid rgba(0, 255, 136, 0.5);
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+
+        @keyframes brandingShimmer {
+          0% { background-position: 0% center; }
+          100% { background-position: 200% center; }
+        }
+
+        @keyframes brandingPulse {
+          from { filter: drop-shadow(0 0 2px var(--primary-color)); transform: scale(1) rotate(-1deg); }
+          to { filter: drop-shadow(0 0 12px var(--primary-color)); transform: scale(1.05) rotate(1deg); }
+        }
+
+        .header-left .divider { width: 1px; height: 30px; background: rgba(255,255,255,0.1); margin: 0 5px; }
+
         .logo-icon-wrap {
-          width: 40px;
-          height: 40px;
+          width: 36px;
+          height: 36px;
           background: linear-gradient(135deg, var(--primary-color), #00ffcc);
-          border-radius: 12px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
           color: #000;
-          box-shadow: 0 0 15px var(--primary-glow);
+          box-shadow: 0 0 10px var(--primary-glow);
         }
 
-        .logo-text { display: flex; flex-direction: column; line-height: 1; }
-        .logo-title { font-size: 1.3rem; font-weight: 900; letter-spacing: -0.5px; }
-        .logo-tag { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; font-weight: 700; }
+        .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+        .logo-title { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.5px; }
+        .logo-tag { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; opacity: 0.8; }
 
         .nav-menu { display: flex; list-style: none; gap: 35px; }
         .nav-menu button {
@@ -328,4 +447,10 @@ function App() {
   );
 }
 
-export default App;
+const AppWithBoundary = () => (
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
+
+export default AppWithBoundary;
