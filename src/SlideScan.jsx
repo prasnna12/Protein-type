@@ -55,7 +55,12 @@ const SlideScan = ({ next, setData, data, user, onReset }) => {
 
       const result = await analyzeBodyImage(data.photo);
       
-      // 3. Results Phase
+      if (result.isHuman === false) {
+        clearInterval(progressInterval);
+        setValidationResult(result);
+        setIsScanning(false);
+        return;
+      }
       setScanPhase(scanPhases[2]);
       setScanProgress(90);
 
@@ -136,15 +141,12 @@ const SlideScan = ({ next, setData, data, user, onReset }) => {
            <div className="rejection-card glass-card premium-scale">
               <div className="rejection-icon">❌</div>
               <h2 className="rejection-title">Analysis Halted</h2>
-              <p className="rejection-msg">Only human body images are allowed for physiological analysis.</p>
+              <p className="rejection-msg">Only human images allowed</p>
               
               <div className="detected-box glass-card">
-                 <span className="det-label">AI DETECTED:</span>
                  <div className="det-content">
-                    <span className="det-emoji">{validationResult.emoji || '📦'}</span>
-                    <span className="det-name">{validationResult.detectedObject || 'Non-human object'}</span>
+                    <span className="det-name">Detected: {validationResult.detectedObject || 'Object'} {validationResult.emoji || '📦'}</span>
                  </div>
-                 <p className="det-hint">"This looks like a {validationResult.detectedObject?.toLowerCase()} {validationResult.emoji}"</p>
               </div>
 
               <button className="btn-primary" onClick={onReset} style={{ width: '100%', marginTop: '20px' }}>
