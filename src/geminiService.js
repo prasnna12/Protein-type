@@ -142,16 +142,19 @@ export const validateHumanImage = async (base64Image) => {
     const processedImage = await processImage(base64Image);
     const base64Data = processedImage.split(',')[1];
 
-    const prompt = `IMAGE CONTENT VALIDATION:
-Check if the image contains a HUMAN being (person). 
-If it is NOT a human, identify exactly what the main object is.
+    const prompt = `CRITICAL HUMAN DETECTION:
+Scan this image for a HUMAN BEING (person). 
+- If the image contains a human (even if only torso/face/partial), set isHuman to true.
+- If the image contains NOTHING human (e.g. text, paper, dog, car, food, objects), set isHuman to false.
+- Be extremely strict. Documents/Papers must be isHuman: false.
 
 Return JSON ONLY:
 {
   "isHuman": boolean,
-  "detectedObject": "string (e.g. Dog, Car, Food, Landscape)",
-  "emoji": "string (emoji representing the object)",
-  "confidence": "0-100%"
+  "detectedObject": "string (e.g. Document, Table, Dog, etc.)",
+  "emoji": "string (emoji)",
+  "confidence": "0-100%",
+  "reason": "Brief reason for detection"
 }`;
 
     const result = await retryAsync(async () => {
@@ -178,10 +181,9 @@ Return JSON ONLY:
 
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
-    console.error("Validation Error:", error.message);
-    // Silent fail safely to true if AI is completely down, 
-    // but the main analysis will still trigger its own error handling.
-    return { isHuman: true, detectedObject: "Unknown", confidence: "0%" };
+    console.error("Critical Validation Failure:", error.message);
+    // FAIL CLOSED: If we can't verify it's a human, we must not analyze it.
+    return { isHuman: false, detectedObject: "Unknown/Cloud Error", confidence: "0%", emoji: "☁️" };
   }
 };
 
@@ -199,6 +201,7 @@ export const analyzeBodyImage = async (base64Image) => {
     const base64Data = processedImage.split(',')[1];
 
     const prompt = `PHYSIQUE TOPOLOGY ANALYSIS:
+STRICT RULE: If this image is a DOCUMENT, PAPER, TEXT, or NOT a human body, return an error.
 Analyze the body in the image with high precision.
 Factors to analyze: Belly fat distribution, chest development, muscular definition, waist-to-shoulder ratio, and neck/face structure.
 
