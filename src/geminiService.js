@@ -136,6 +136,55 @@ export const calculateFallbackAnalysis = (weight = 75, age = 25, gender = 'Male'
   };
 };
 
+export const validateHumanImage = async (base64Image) => {
+  try {
+    console.log("AI: Validating human presence...");
+    const processedImage = await processImage(base64Image);
+    const base64Data = processedImage.split(',')[1];
+
+    const prompt = `IMAGE CONTENT VALIDATION:
+Check if the image contains a HUMAN being (person). 
+If it is NOT a human, identify exactly what the main object is.
+
+Return JSON ONLY:
+{
+  "isHuman": boolean,
+  "detectedObject": "string (e.g. Dog, Car, Food, Landscape)",
+  "emoji": "string (emoji representing the object)",
+  "confidence": "0-100%"
+}`;
+
+    const result = await retryAsync(async () => {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: "image/jpeg", data: base64Data } }
+            ]
+          }]
+        })
+      });
+
+      if (!response.ok) throw new Error(`VALIDATION_API_ERROR_${response.status}`);
+      return await response.json();
+    });
+
+    const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("VALIDATION_JSON_NOT_FOUND");
+
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    console.error("Validation Error:", error.message);
+    // Silent fail safely to true if AI is completely down, 
+    // but the main analysis will still trigger its own error handling.
+    return { isHuman: true, detectedObject: "Unknown", confidence: "0%" };
+  }
+};
+
 export const analyzeBodyImage = async (base64Image) => {
   try {
     // Check Cache First

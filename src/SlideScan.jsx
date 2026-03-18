@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { analyzeBodyImage, calculateFallbackAnalysis } from './geminiService';
+import { analyzeBodyImage, calculateFallbackAnalysis, validateHumanImage } from './geminiService';
 
-const SlideScan = ({ next, setData, data, user }) => {
+const SlideScan = ({ next, setData, data, user, onReset }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanPhase, setScanPhase] = useState("");
   const [error, setError] = useState(null);
+  const [validationResult, setValidationResult] = useState(null); // { isHuman: false, detectedObject: 'Dog', emoji: '🐶' }
 
   const scanPhases = [
     "Scanning Body Structure",
@@ -35,10 +36,21 @@ const SlideScan = ({ next, setData, data, user }) => {
     }, 150);
 
     try {
-      // 1. Processing / Uploading Phase
+      // 1. Validation Phase
+      setScanPhase("Verifying Image Content...");
+      const validation = await validateHumanImage(data.photo);
+      
+      if (!validation.isHuman) {
+        clearInterval(progressInterval);
+        setValidationResult(validation);
+        setIsScanning(false);
+        return;
+      }
+
+      // 2. Processing / Uploading Phase
       setScanPhase(scanPhases[0]);
       
-      // 2. Analyzing Phase
+      // 3. Analyzing Phase
       setTimeout(() => setScanPhase(scanPhases[1]), 800);
 
       const result = await analyzeBodyImage(data.photo);
@@ -119,7 +131,68 @@ const SlideScan = ({ next, setData, data, user }) => {
 
       {error && <p className="error-text">{error}</p>}
 
+      {validationResult && (
+        <div className="validation-rejection-overlay slide-in-bottom">
+           <div className="rejection-card glass-card premium-scale">
+              <div className="rejection-icon">❌</div>
+              <h2 className="rejection-title">Analysis Halted</h2>
+              <p className="rejection-msg">Only human body images are allowed for physiological analysis.</p>
+              
+              <div className="detected-box glass-card">
+                 <span className="det-label">AI DETECTED:</span>
+                 <div className="det-content">
+                    <span className="det-emoji">{validationResult.emoji || '📦'}</span>
+                    <span className="det-name">{validationResult.detectedObject || 'Non-human object'}</span>
+                 </div>
+                 <p className="det-hint">"This looks like a {validationResult.detectedObject?.toLowerCase()} {validationResult.emoji}"</p>
+              </div>
+
+              <button className="btn-primary" onClick={onReset} style={{ width: '100%', marginTop: '20px' }}>
+                Try Another Photo →
+              </button>
+           </div>
+        </div>
+      )}
+
       <style>{`
+        .validation-rejection-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(10, 25, 47, 0.9);
+          backdrop-filter: blur(15px);
+          z-index: 100;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 30px;
+        }
+        .rejection-card {
+           width: 100%;
+           max-width: 400px;
+           padding: 40px;
+           text-align: center;
+           border-color: rgba(255, 77, 77, 0.2);
+           background: rgba(255, 77, 77, 0.03) !important;
+        }
+        .rejection-icon { font-size: 3rem; margin-bottom: 20px; }
+        .rejection-title { font-size: 1.8rem; font-weight: 900; color: #fff; margin-bottom: 12px; }
+        .rejection-msg { font-size: 0.95rem; color: var(--text-dim); margin-bottom: 30px; line-height: 1.5; }
+        
+        .detected-box {
+          padding: 20px;
+          margin-bottom: 25px;
+          background: rgba(255,255,255,0.02) !important;
+          border-color: rgba(255,255,255,0.05);
+        }
+        .det-label { font-size: 0.7rem; font-weight: 950; color: var(--primary-color); letter-spacing: 2px; display: block; margin-bottom: 12px; }
+        .det-content { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 12px; }
+        .det-emoji { font-size: 2.2rem; }
+        .det-name { font-size: 1.4rem; font-weight: 800; color: #fff; }
+        .det-hint { font-size: 0.85rem; color: var(--text-dim); font-style: italic; }
+
+        .slide-in-bottom { animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
         .slide-scan {
           max-width: 700px;
           padding: 48px;

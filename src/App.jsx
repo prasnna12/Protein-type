@@ -142,6 +142,11 @@ function App() {
   const nextSlide = () => setCurrentSlide(prev => Math.min(prev + 1, TOTAL_SLIDES));
   const prevSlide = () => setCurrentSlide(prev => Math.max(prev - 1, 1));
   
+  const resetPhoto = () => {
+    setUserData(prev => ({ ...prev, photo: null, analysis: null }));
+    setCurrentSlide(1);
+  };
+  
   // BROKEN LINK PROTECTION: Validates slide range
   const goToSlide = (slide) => {
     if (slide < 1 || slide > TOTAL_SLIDES) {
@@ -180,12 +185,12 @@ function App() {
     }
     if (currentSlide > 2 && !userData.analysis) {
       setTimeout(() => setCurrentSlide(2), 0);
-      return <SlideScan next={nextSlide} data={userData} setData={setUserData} />;
+      return <SlideScan next={nextSlide} data={userData} setData={setUserData} onReset={resetPhoto} />;
     }
 
     switch(currentSlide) {
       case 1: return <SlideHome next={nextSlide} setData={setUserData} onLoginRequired={() => openAuth('login')} user={user} />;
-      case 2: return <SlideScan next={nextSlide} data={userData} setData={setUserData} />;
+      case 2: return <SlideScan next={nextSlide} data={userData} setData={setUserData} onReset={resetPhoto} />;
       case 3: return <SlideProfile next={nextSlide} setData={setUserData} data={userData} />;
       case 4: return <SlideGoal next={nextSlide} data={userData} setData={setUserData} />;
       case 5: return <SlideReport next={nextSlide} data={userData} setData={setUserData} />;
