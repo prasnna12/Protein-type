@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
 import AuthModal from './AuthModal'
 import Footer from './Footer'
+import Toast from './Toast'
 import React, { Suspense, lazy } from 'react'
 
 // Lazy load slides for performance
@@ -103,9 +104,17 @@ const BrandingTag = () => (
 
 function App() {
   const { user, logout } = useAuth();
+  const [toast, setToast] = useState(null);
+  
   useEffect(() => {
-    const handleOnline = () => alert("Connection Restored.");
-    const handleOffline = () => alert("Network issue detected. Please check your internet connection.");
+    const handleOnline = () => {
+      setIsOnline(true);
+      setToast({ type: 'success', message: "Connection Restored." });
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setToast({ type: 'error', message: "Network issue detected. AI Neural Engine Paused." });
+    };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {
@@ -282,6 +291,9 @@ function App() {
         onClose={() => setIsAuthModalOpen(false)} 
         initialTab={authTab}
       />
+
+      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+
 
       <style>{`
         .page-root {

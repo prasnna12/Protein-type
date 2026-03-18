@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Toast from './Toast';
 import { useAuth } from './AuthContext';
 
 const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
@@ -14,8 +15,8 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
   
   const { login, signup, loginWithGoogle } = useAuth();
 
@@ -24,19 +25,19 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address.');
+      setToast({ type: 'error', message: 'Please enter a valid email address.' });
       return false;
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+      setToast({ type: 'error', message: 'Password must be at least 6 characters.' });
       return false;
     }
     if (!isLogin && password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setToast({ type: 'error', message: 'Passwords do not match.' });
       return false;
     }
     if (!isLogin && !name.trim()) {
-      setError('Please enter your full name.');
+      setToast({ type: 'error', message: 'Please enter your full name.' });
       return false;
     }
     return true;
@@ -44,7 +45,7 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setToast(null);
     
     if (!validateForm()) return;
 
@@ -54,8 +55,6 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
         await login(email, password);
       } else {
         await signup(email, password);
-        // If your Firebase setup doesn't auto-update profile, 
-        // you might want to call updateProfile(auth.currentUser, { displayName: name }) here.
       }
       onClose();
     } catch (err) {
@@ -68,19 +67,19 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
       } else if (err.code === 'auth/network-request-failed') {
         friendlyMsg = "Network error. Please check your internet connection.";
       }
-      setError(friendlyMsg);
+      setToast({ type: 'error', message: friendlyMsg });
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setError('');
+    setToast(null);
     try {
       await loginWithGoogle();
       onClose();
     } catch (err) {
-      setError(err.message);
+      setToast({ type: 'error', message: err.message });
     }
   };
 
@@ -146,8 +145,6 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="auth-form-modern">
-              {error && <div className="auth-error-banner">{error}</div>}
-              
               {!isLogin && (
                 <div className="modern-input-group">
                   <label>Full Name</label>
@@ -217,6 +214,8 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
           </div>
         </div>
       </div>
+
+      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
 
       <style>{`
         .modal-overlay {
@@ -366,15 +365,6 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
         .auth-desc { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
 
         .auth-form-modern { display: flex; flex-direction: column; gap: 20px; }
-        .auth-error-banner {
-          background: rgba(255, 77, 77, 0.1);
-          border: 1px solid rgba(255, 77, 77, 0.2);
-          color: #ff4d4d;
-          padding: 12px 16px;
-          border-radius: 12px;
-          font-size: 0.85rem;
-          font-weight: 600;
-        }
 
         .modern-input-group label {
           display: block;

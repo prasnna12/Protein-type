@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import Toast from './Toast';
 import { getRecommendedFoods, getMealPlan } from './nutritionService';
 
 const DIET_LABELS = { vegetarian: '🥗 Vegetarian', non_vegetarian: '🍗 Non-Veg' };
@@ -80,6 +81,7 @@ const SlidePlan = ({ data }) => {
   const [selectedFood, setSelectedFood] = useState(null);
   const [activeTab, setActiveTab] = useState('timeline');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [toast, setToast] = useState(null);
   
   // Track which option index is selected for each meal (default to 0)
   const [mealSelections, setMealSelections] = useState({ 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 });
@@ -97,6 +99,11 @@ const SlidePlan = ({ data }) => {
         </div>
         <h1 className="text-gradient">Daily Master Strategy</h1>
         <p className="plan-intro">Your complete a-z execution guide for the next 24 hours.</p>
+        {data.analysis?.isEstimated && (
+          <div className="fallback-banner glass-card animate-in">
+             <span>⚠️ Neural Fallback Mode Active — AI Neural Engine Busy</span>
+          </div>
+        )}
       </div>
 
       <div className="plan-tabs glass-card">
@@ -215,9 +222,9 @@ const SlidePlan = ({ data }) => {
         )}
       </div>
 
-      {selectedFood && <FoodDetailModal food={selectedFood} dailyTarget={proteinTarget} onClose={() => setSelectedFood(null)} />}
+      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
 
-      <button className="btn-primary finalize-btn" onClick={() => alert('Plan Saved to Your AI Dashboard!')}>
+      <button className="btn-primary finalize-btn" onClick={() => setToast({ type: 'success', message: 'Plan Saved to Your AI Dashboard!' })}>
         Finalize & Download Guide →
       </button>
 
@@ -227,7 +234,14 @@ const SlidePlan = ({ data }) => {
         .plan-badges { display: flex; justify-content: center; gap: 12px; margin-bottom: 16px; }
         .badge-item { background: var(--primary-color); color: #000; padding: 5px 15px; border-radius: 100px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
         .badge-item.dim { background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid rgba(255,255,255,0.1); }
-        .plan-intro { color: var(--text-dim); margin-top: 10px; }
+        .plan-intro { color: var(--text-dim); margin-top: 10px; margin-bottom: 20px; }
+        
+        .fallback-banner { 
+          max-width: 500px; margin: 20px auto 0; padding: 12px 20px; 
+          border-color: rgba(255, 165, 0, 0.3) !important; background: rgba(255, 165, 0, 0.05) !important;
+          color: #ff9d00; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.5px;
+          text-transform: uppercase;
+        }
         
         .plan-tabs { display: flex; padding: 6px; gap: 6px; max-width: 400px; margin: 0 auto 40px; }
         .plan-tabs button { flex: 1; padding: 12px; border: none; background: none; color: var(--text-dim); font-weight: 800; cursor: pointer; border-radius: 12px; transition: 0.3s; }

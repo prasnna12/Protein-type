@@ -1,7 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
+import Toast from './Toast';
 
 const SlideHome = ({ next, setData, onLoginRequired, user }) => {
   const fileInputRef = useRef(null);
+  const [toast, setToast] = useState(null);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -10,14 +12,14 @@ const SlideHome = ({ next, setData, onLoginRequired, user }) => {
     // VALIDATION: Type (JPG, PNG, WEBP)
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      alert("Please upload a valid image file (JPG, PNG, or WEBP).");
+      setToast({ type: 'error', message: "Please upload a valid image file (JPG, PNG, or WEBP)." });
       e.target.value = '';
       return;
     }
 
     // VALIDATION: Size (Max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("File is too large. Maximum size allowed is 5MB.");
+      setToast({ type: 'error', message: "File is too large. Maximum size allowed is 5MB." });
       e.target.value = '';
       return;
     }
@@ -96,6 +98,8 @@ const SlideHome = ({ next, setData, onLoginRequired, user }) => {
           </div>
         </div>
       </div>
+
+      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
 
       <style>{`
         .slide-home {

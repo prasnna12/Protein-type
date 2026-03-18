@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { retryAsync } from './utils/apiUtils';
 
 const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
@@ -9,49 +10,51 @@ export const analyzeBodyImage = async (base64Image) => {
   }
 
   try {
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Perform a high-precision physique analysis by evaluating:
-                - Visual Signals: stomach profile (flat/enlarged), shoulder width (narrow/broad), waist-to-hip ratio.
-                - Muscle Density: visible separation and vascularity grade (1-10).
-                - Symmetry: shoulder/hip alignment score (0-100).
-                
-                Categories:
-                1. OVERWEIGHT: Enlarged stomach, low definition. (BF: 22-30%, Goal: Fat Loss)
-                2. SKINNY: Narrow frame, minimal muscle mass. (BF: 8-12%, Goal: Bulk)
-                3. ATHLETIC: Lean with V-taper shape. (BF: 12-16%, Goal: Lean Bulk)
-                4. MUSCULAR: High density, visible abs. (BF: 8-12%, Goal: Maintenance)
-                5. NORMAL: Balanced build, moderate fat. (BF: 16-20%, Goal: Maintenance)
-
-                Return a JSON object with these EXACT keys: 
-                bodyType, bodyFatRange, muscleLevel, muscleGrade (1-10), symmetryScore (0-100), visualSignals (object with keys: stomach, shoulders, waist), suggestedGoal, and summary.`
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: base64Image
+    const response = await retryAsync(async () => {
+      return await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `Perform a high-precision physique analysis by evaluating:
+                  - Visual Signals: stomach profile (flat/enlarged), shoulder width (narrow/broad), waist-to-hip ratio.
+                  - Muscle Density: visible separation and vascularity grade (1-10).
+                  - Symmetry: shoulder/hip alignment score (0-100).
+                  
+                  Categories:
+                  1. OVERWEIGHT: Enlarged stomach, low definition. (BF: 22-30%, Goal: Fat Loss)
+                  2. SKINNY: Narrow frame, minimal muscle mass. (BF: 8-12%, Goal: Bulk)
+                  3. ATHLETIC: Lean with V-taper shape. (BF: 12-16%, Goal: Lean Bulk)
+                  4. MUSCULAR: High density, visible abs. (BF: 8-12%, Goal: Maintenance)
+                  5. NORMAL: Balanced build, moderate fat. (BF: 16-20%, Goal: Maintenance)
+  
+                  Return a JSON object with these EXACT keys: 
+                  bodyType, bodyFatRange, muscleLevel, muscleGrade (1-10), symmetryScore (0-100), visualSignals (object with keys: stomach, shoulders, waist), suggestedGoal, and summary.`
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: base64Image
+                  }
                 }
-              }
-            ]
+              ]
+            }
+          ],
+          response_format: { type: 'json_object' }
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json'
           }
-        ],
-        response_format: { type: 'json_object' }
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${API_KEY}`,
-          'Content-Type': 'application/json'
         }
-      }
-    );
+      );
+    });
 
     const result = JSON.parse(response.data.choices[0].message.content);
     return result;
@@ -115,7 +118,6 @@ const mockAnalysis = (image) => {
       suggestedGoal: 'Lean Bulk',
       summary: 'Balanced physique with moderate muscle definition. Recomposition is recommended to lean out and add quality mass.'
     },
-    // Adding more for higher seed variability
     {
       bodyType: 'Overweight',
       bodyFatRange: '23–26%',
@@ -128,7 +130,6 @@ const mockAnalysis = (image) => {
     }
   ];
   
-  // High-precision selection: match seeds better
   const index = seed >= profiles.length ? seed % profiles.length : seed;
   return profiles[index];
 };

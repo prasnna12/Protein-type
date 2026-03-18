@@ -122,6 +122,16 @@ const SlideReport = ({ next, data }) => {
             </div>
           </div>
 
+          {analysis?.isEstimated && (
+            <div className="fallback-notice glass-card animate-in">
+              <span className="fallback-icon">⚠️</span>
+              <div>
+                <h5>Neural Fallback Active</h5>
+                <p>AI Neural engine is busy. Using high-precision estimation based on metrics.</p>
+              </div>
+            </div>
+          )}
+
           <div className="insight-card glass-card">
             <h4 className="card-title">✨ AI INSIGHT</h4>
             <p className="insight-text">{analysis?.explanation || "Based on your current physique, focus on high-quality protein to support muscle repair while maintaining a moderate caloric deficit if fat loss is prioritized."}</p>
@@ -255,6 +265,11 @@ const SlideReport = ({ next, data }) => {
         .insight-card { padding: 25px; }
         .card-title { font-size: 0.75rem; font-weight: 900; color: var(--primary-color); margin-bottom: 12px; letter-spacing: 1px; }
         .insight-text { font-size: 0.85rem; color: var(--text-dim); line-height: 1.6; font-style: italic; }
+
+        .fallback-notice { padding: 15px; margin-bottom: 20px; border-color: rgba(255, 165, 0, 0.3) !important; display: flex; gap: 12px; align-items: center; background: rgba(255, 165, 0, 0.05) !important; }
+        .fallback-icon { font-size: 1.5rem; }
+        .fallback-notice h5 { font-size: 0.8rem; font-weight: 950; color: #ff9d00; text-transform: uppercase; margin-bottom: 2px; }
+        .fallback-notice p { font-size: 0.7rem; color: var(--text-dim); line-height: 1.4; }
         
         .protein-target-card { padding: 30px; text-align: center; margin-bottom: 30px; background: linear-gradient(135deg, rgba(0,255,136,0.1), transparent) !important; border: 1px solid rgba(0,255,136,0.1); }
         .target-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }

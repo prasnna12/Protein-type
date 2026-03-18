@@ -1,3 +1,4 @@
+import { retryAsync } from './utils/apiUtils';
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
@@ -11,11 +12,11 @@ const processImage = async (base64String) => {
   return new Promise((resolve, reject) => {
     if (!base64String) return reject("No image provided");
     const img = new Image();
-    img.crossOrigin = "anonymous"; 
+    img.crossOrigin = "anonymous";
     const timeout = setTimeout(() => {
-        img.src = ''; 
-        reject("Image processing timeout");
-    }, 8000); 
+      img.src = '';
+      reject("Image processing timeout");
+    }, 8000);
     img.src = base64String;
     img.onload = () => {
       clearTimeout(timeout);
@@ -58,10 +59,10 @@ const getStableVariedResult = (seedStr) => {
   const h = Math.abs(hash);
   const types = ["Skinny", "Normal", "Fit", "Muscular", "Overweight", "Obese"];
   const bodyType = types[h % types.length];
-  
+
   let recommendedGoal = "Maintenance";
   let fat = 20;
-  
+
   if (bodyType === "Obese") {
     recommendedGoal = "Fat Loss";
     fat = 32 + (h % 10); // 32% to 42%
@@ -84,7 +85,7 @@ const getStableVariedResult = (seedStr) => {
 
   const muscle = 40 + (h % 40);
   const accuracy = 82 + (h % 15); // 82% to 97%
-  
+
   return {
     bodyType,
     bodyFat: fat.toString(),
@@ -97,11 +98,11 @@ const getStableVariedResult = (seedStr) => {
     metabolicAge: "Active",
     physiqueIndex: (h % 100) / 10,
     visualSignals: {
-        bodyFat: fat > 25 ? "High" : (fat < 15 ? "Low" : "Medium"),
-        stomach: fat > 25 ? "Protruding" : (fat < 15 ? "Flat" : "Proportionate"),
-        definition: muscle > 70 ? "Sharp" : "Soft",
-        shoulders: h % 2 === 0 ? "Broad" : "Average",
-        waist: fat > 25 ? "Wide" : "Tight"
+      bodyFat: fat > 25 ? "High" : (fat < 15 ? "Low" : "Medium"),
+      stomach: fat > 25 ? "Protruding" : (fat < 15 ? "Flat" : "Proportionate"),
+      definition: muscle > 70 ? "Sharp" : "Soft",
+      shoulders: h % 2 === 0 ? "Broad" : "Average",
+      waist: fat > 25 ? "Wide" : "Tight"
     },
     explanation: "Multi-factor topological scan completed. Structural density and fat distribution analyzed.",
     summary: `Physique matches a ${bodyType} profile with ~${fat}% body fat. Priority: ${recommendedGoal}.`
@@ -110,7 +111,7 @@ const getStableVariedResult = (seedStr) => {
 
 export const calculateFallbackAnalysis = (weight = 75, age = 25, gender = 'Male', imageSeed = "") => {
   if (imageSeed) return getStableVariedResult(imageSeed.substring(100, 500));
-  
+
   const isHeavy = weight > 95;
   return {
     gender,
@@ -124,40 +125,15 @@ export const calculateFallbackAnalysis = (weight = 75, age = 25, gender = 'Male'
     metabolicAge: "Stable",
     physiqueIndex: isHeavy ? 8.2 : 5.4,
     visualSignals: {
-        bodyFat: isHeavy ? "High" : "Medium",
-        stomach: isHeavy ? "Protruding" : "Proportionate",
-        definition: "None",
-        shoulders: "Average",
-        waist: "Wide"
+      bodyFat: isHeavy ? "High" : "Medium",
+      stomach: isHeavy ? "Protruding" : "Proportionate",
+      definition: "None",
+      shoulders: "Average",
+      waist: "Wide"
     },
     explanation: "AI server is busy. Results based on profile metrics.",
     summary: "Check connection for real-time vision analysis."
   };
-};
-
-// CENTRAL STABILITY UTILITY: Retry logic for all AI/API calls
-const callWithRetry = async (fn, retries = 3, delayMs = 1500) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      // Create a timeout promise
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("NETWORK_TIMEOUT")), 15000); // 15s timeout
-      });
-
-      // Race the actual function against the timeout
-      return await Promise.race([fn(), timeoutPromise]);
-    } catch (err) {
-      const isLastRetry = i === retries - 1;
-      const isTimeout = err.message === "NETWORK_TIMEOUT";
-      
-      console.warn(`API Attempt ${i + 1} failed:`, isTimeout ? "Timeout" : err.message);
-      
-      if (isLastRetry) throw err;
-      
-      // Wait before next retry (longer wait for timeouts)
-      await new Promise(res => setTimeout(res, isTimeout ? delayMs * 2 : delayMs));
-    }
-  }
 };
 
 export const analyzeBodyImage = async (base64Image) => {
@@ -202,7 +178,7 @@ Return JSON ONLY:
 
     console.log("AI: Sending to Gemini API (v1beta)...");
 
-    const result = await callWithRetry(async () => {
+    const result = await retryAsync(async () => {
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -212,13 +188,7 @@ Return JSON ONLY:
               { text: prompt },
               { inline_data: { mime_type: "image/jpeg", data: base64Data } }
             ]
-          }],
-          safetySettings: [
-            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-          ]
+          }]
         })
       });
 
@@ -226,9 +196,7 @@ Return JSON ONLY:
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData?.error?.message || `API_ERROR_${response.status}`);
       }
-
-      const data = await response.json();
-      return data;
+      return await response.json();
     });
 
     const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -239,12 +207,13 @@ Return JSON ONLY:
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("JSON_NOT_FOUND");
-    
+
     const parsed = JSON.parse(jsonMatch[0]);
     aiCache.set(imageHash, parsed); // Cache valid result
     console.log("AI Success:", parsed.bodyType);
     return parsed;
-
+  } catch (error) {
+    console.error("Gemini AI Final Error:", error.message);
     throw error;
   }
 };

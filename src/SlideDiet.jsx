@@ -210,6 +210,7 @@ const SlideDiet = ({ next, setData }) => {
           .diet-options { grid-template-columns: 1fr; gap: 16px; }
           .diet-container { padding: 32px 20px; }
           .diet-footer { flex-direction: column; gap: 24px; text-align: center; }
+        }
       `}</style>
     </div>
   );
