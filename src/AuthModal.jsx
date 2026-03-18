@@ -21,24 +21,54 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
 
   if (!isOpen) return null;
 
+  const validateForm = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
+      return false;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return false;
+    }
+    if (!isLogin && password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return false;
+    }
+    if (!isLogin && !name.trim()) {
+      setError('Please enter your full name.');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
-    if (!isLogin && password !== confirmPassword) {
-      return setError('Passwords do not match');
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
     try {
       if (isLogin) {
         await login(email, password);
       } else {
-        await signup(email, password, name);
+        await signup(email, password);
+        // If your Firebase setup doesn't auto-update profile, 
+        // you might want to call updateProfile(auth.currentUser, { displayName: name }) here.
       }
       onClose();
     } catch (err) {
-      setError(err.message.replace('Firebase: ', ''));
+      console.error("Auth Error:", err.code);
+      let friendlyMsg = err.message.replace('Firebase: ', '');
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+        friendlyMsg = "Invalid email or password. Please try again.";
+      } else if (err.code === 'auth/email-already-in-use') {
+        friendlyMsg = "This email is already registered. Try logging in.";
+      } else if (err.code === 'auth/network-request-failed') {
+        friendlyMsg = "Network error. Please check your internet connection.";
+      }
+      setError(friendlyMsg);
     } finally {
       setLoading(false);
     }

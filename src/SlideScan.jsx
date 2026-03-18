@@ -8,10 +8,11 @@ const SlideScan = ({ next, setData, data, user }) => {
   const [error, setError] = useState(null);
 
   const scanPhases = [
-    "Uploading Image",
-    "Scanning Body",
-    "Analyzing Body Structure",
-    "Generating Results"
+    "Scanning Body Structure",
+    "Analyzing Physique",
+    "Verifying Results",
+    "Estimated Analysis (AI Busy)",
+    "Finalizing"
   ];
 
   useEffect(() => {
@@ -20,55 +21,62 @@ const SlideScan = ({ next, setData, data, user }) => {
     }
   }, [data.photo]);
 
-  const startScan = async (retryCount = 0) => {
+  const startScan = async () => {
     setIsScanning(true);
     setScanProgress(0);
     setScanPhase(scanPhases[0]);
     
+    // Non-blocking progress simulation for visual feedback
     const progressInterval = setInterval(() => {
       setScanProgress(prev => {
-        const nextVal = prev + 1;
-        
-        // Precise phase mapping
-        if (nextVal < 25) setScanPhase(scanPhases[0]);
-        else if (nextVal < 50) setScanPhase(scanPhases[1]);
-        else if (nextVal < 75) setScanPhase(scanPhases[2]);
-        else setScanPhase(scanPhases[3]);
-
-        if (nextVal >= 98) {
-          clearInterval(progressInterval);
-          return 98;
-        }
-        return nextVal;
+        if (prev >= 95) return prev;
+        return prev + 5; 
       });
-    }, 50);
+    }, 150);
 
     try {
+      // 1. Processing / Uploading Phase
+      setScanPhase(scanPhases[0]);
+      
+      // 2. Analyzing Phase
+      setTimeout(() => setScanPhase(scanPhases[1]), 800);
+
       const result = await analyzeBodyImage(data.photo);
       
+      // 3. Results Phase
+      setScanPhase(scanPhases[2]);
+      setScanProgress(90);
+
+      // 4. Finalizing Phase
+      setTimeout(() => setScanPhase(scanPhases[3]), 400);
+
       clearInterval(progressInterval);
       setScanProgress(100);
-      setScanPhase("Finalizing...");
+      
       setData(prev => ({ ...prev, analysis: result }));
       
+      // Near-instant transition
       setTimeout(() => {
         next();
-      }, 1000);
+      }, 300);
     } catch (err) {
-      if (retryCount < 1) {
-        console.warn("API Error, retrying once...");
-        clearInterval(progressInterval);
-        startScan(retryCount + 1);
-        return;
-      }
-      
       clearInterval(progressInterval);
-      console.error("Scan Failed after retry:", err);
-      // Fallback with hashed intelligence
-      const fallbackResult = calculateFallbackAnalysis(userData?.weight || 75, userData?.gender || 'Male', data.photo);
-      setData(prev => ({ ...prev, analysis: fallbackResult }));
-      setScanProgress(100);
-      setTimeout(() => next(), 1500);
+      console.warn("AI Analysis issue:", err.message);
+      
+      const isTimeout = err.message === 'NETWORK_TIMEOUT' || err.message.includes('timeout');
+      setScanPhase(isTimeout ? "Neural Core Busy..." : "Processing Issue...");
+      
+      // EXPLICIT BUT SAFE FALLBACK
+      setTimeout(() => {
+        setScanPhase(scanPhases[3]); // Estimated Analysis
+        const fallbackResult = calculateFallbackAnalysis(data.weight || 75, 25, data.gender || 'Male', data.photo);
+        setData(prev => ({ 
+          ...prev, 
+          analysis: { ...fallbackResult, isEstimated: true } 
+        }));
+        setScanProgress(100);
+        setTimeout(() => next(), 1200); 
+      }, 800);
     }
   };
 
@@ -125,12 +133,12 @@ const SlideScan = ({ next, setData, data, user }) => {
         }
         .image-preview-container {
           position: relative;
-          width: 280px;
+          width: 200px;
           aspect-ratio: 3/4;
           overflow: hidden;
-          padding: 10px;
-          background: rgba(255,255,255,0.03) !important;
-          border-color: rgba(6, 182, 212, 0.2);
+          padding: 8px;
+          background: rgba(255,255,255,0.02) !important;
+          border-color: rgba(0, 198, 255, 0.2);
         }
         .image-preview-container img {
           width: 100%;
@@ -151,10 +159,10 @@ const SlideScan = ({ next, setData, data, user }) => {
           position: absolute;
           width: 100%;
           height: 3px;
-          background: var(--primary-color);
+          background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
           box-shadow: 0 0 20px var(--primary-color), 0 0 40px var(--primary-color);
           top: 0;
-          animation: scanLoop 3s infinite ease-in-out;
+          animation: scanLoop 2.5s infinite ease-in-out;
         }
         @keyframes scanLoop {
           0%, 100% { top: 0; }
@@ -178,8 +186,8 @@ const SlideScan = ({ next, setData, data, user }) => {
         .phase-text { font-size: 0.8rem; font-weight: 800; color: var(--primary-color); letter-spacing: 1px; }
         .percent-text { font-size: 0.9rem; font-weight: 900; color: #fff; }
         
-        .progress-track { height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--primary-color); box-shadow: 0 0 15px var(--primary-glow); }
+        .progress-track { height: 6px; background: rgba(255,255,255,0.03); border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary-color), var(--accent-purple)); box-shadow: 0 0 15px var(--primary-glow); }
         
         .error-text { color: #ff4d4d; margin-top: 20px; font-weight: 700; }
       `}</style>

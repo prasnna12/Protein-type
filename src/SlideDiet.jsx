@@ -18,7 +18,7 @@ const SlideDiet = ({ next, setData }) => {
       ),
       desc: 'Plant-based proteins — paneer, tofu, soya chunks, lentils, legumes and dairy products.',
       theme: 'veg-theme',
-      accent: '#22c55e'
+      accent: '#00FF9D'
     },
     {
       id: 'non_vegetarian',
@@ -32,7 +32,7 @@ const SlideDiet = ({ next, setData }) => {
       ),
       desc: 'High-quality animal proteins — chicken, eggs, fish, lean meat, turkey and dairy.',
       theme: 'nonveg-theme',
-      accent: '#ef4444'
+      accent: '#FF4D4D'
     },
   ];
 
@@ -146,8 +146,8 @@ const SlideDiet = ({ next, setData }) => {
           transform: translateY(-10px);
         }
         
-        .veg-theme.active { border-color: #22c55e; box-shadow: 0 10px 30px rgba(34, 197, 94, 0.2); }
-        .nonveg-theme.active { border-color: #ef4444; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.2); }
+        .veg-theme.active { border-color: #00FF9D; box-shadow: 0 10px 30px rgba(0, 255, 157, 0.2); }
+        .nonveg-theme.active { border-color: #FF4D4D; box-shadow: 0 10px 30px rgba(255, 77, 77, 0.2); }
 
         .diet-select-check {
           position: absolute;
@@ -189,8 +189,8 @@ const SlideDiet = ({ next, setData }) => {
           justify-content: center;
         }
         
-        .veg-theme .diet-mini-icon { color: #22c55e; }
-        .nonveg-theme .diet-mini-icon { color: #ef4444; }
+        .veg-theme .diet-mini-icon { color: #00FF9D; }
+        .nonveg-theme .diet-mini-icon { color: #FF4D4D; }
         
         .diet-card-content h2 { font-size: 1.5rem; font-weight: 800; color: #fff; }
         .diet-card-content p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.6; margin-bottom: 20px; }

@@ -1,16 +1,28 @@
-import { useState } from 'react'
-import './index.css'
-import SlideHome from './SlideHome'
-import SlideProfile from './SlideProfile'
-import SlideScan from './SlideScan'
-import SlideGoal from './SlideGoal'
-import SlideReport from './SlideReport'
-import SlidePlan from './SlidePlan'
-import Footer from './Footer'
+import { useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
 import AuthModal from './AuthModal'
-import SlideTips from './SlideTips'
-import React from 'react'
+import Footer from './Footer'
+import React, { Suspense, lazy } from 'react'
+
+// Lazy load slides for performance
+const SlideHome = lazy(() => import('./SlideHome'));
+const SlideProfile = lazy(() => import('./SlideProfile'));
+const SlideScan = lazy(() => import('./SlideScan'));
+const SlideGoal = lazy(() => import('./SlideGoal'));
+const SlideReport = lazy(() => import('./SlideReport'));
+const SlidePlan = lazy(() => import('./SlidePlan'));
+
+const LoadingSpinner = () => (
+  <div className="loading-fallback">
+    <div className="spinner"></div>
+    <p>Initializing Neural Engine...</p>
+    <style>{`
+      .loading-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; gap: 20px; color: var(--text-dim); }
+      .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    `}</style>
+  </div>
+);
 
 // ── GLOBAL ERROR BOUNDARY ──────────────────────────
 class ErrorBoundary extends React.Component {
@@ -138,6 +150,19 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
+  // Network Status Monitoring
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const renderSlide = () => {
     // Data Integrity Redirects
     if (currentSlide > 1 && !userData.photo) {
@@ -160,7 +185,7 @@ function App() {
     }
   };
 
-  const slideLabels = ['Home / Upload', 'AI Scanning', 'Analysis Dashboard', 'Goal Selection', 'Health Report', 'Nutrition Plan'];
+  const slideLabels = ['Home / Upload', 'AI Body Analysis', 'Analysis Result', 'User Inputs', 'Protein Calculation', 'Master Strategy'];
 
   return (
     <div className="page-root">
@@ -221,6 +246,18 @@ function App() {
 
       <div className="app-main-content">
         <div className="app-container">
+          {!isOnline && (
+            <div className="network-warning-bar slide-in-top">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.58 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+              <span>Internet Disconnected. AI Neural Engine Paused.</span>
+              <style>{`
+                .network-warning-bar {
+                  background: #ef4444; border-radius: 12px; padding: 10px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; font-weight: 800; font-size: 0.85rem; color: #fff; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.2);
+                }
+              `}</style>
+            </div>
+          )}
+
           <div className="slide-progress-bar">
              <div className="progress-track">
                <div className="progress-fill" style={{ width: `${(currentSlide / TOTAL_SLIDES) * 100}%` }}></div>
@@ -231,7 +268,9 @@ function App() {
           </div>
 
           <main className="slide-content-wrapper stagger-in" key={currentSlide}>
-            {renderSlide()}
+            <Suspense fallback={<LoadingSpinner />}>
+              {renderSlide()}
+            </Suspense>
           </main>
         </div>
       </div>
@@ -260,8 +299,8 @@ function App() {
           height: 80px;
           z-index: 1000;
           backdrop-filter: blur(20px);
-          background: rgba(15, 23, 42, 0.7) !important;
-          border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+          background: rgba(10, 25, 47, 0.8) !important;
+          border-bottom: 1px solid rgba(0, 198, 255, 0.1);
           border-radius: 0;
         }
 
@@ -289,13 +328,13 @@ function App() {
           font-size: 0.7rem;
           font-weight: 950;
           color: #fff;
-          background: linear-gradient(90deg, #00ffcc, #06b6d4, #00ffcc);
+          background: linear-gradient(90deg, var(--primary-color), var(--accent-purple), var(--primary-color));
           background-size: 200% auto;
           padding: 6px 16px;
           border-radius: 100px;
-          box-shadow: 0 0 25px rgba(0, 255, 136, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2);
+          box-shadow: 0 0 25px rgba(0, 198, 255, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2);
           animation: brandingShimmer 3s linear infinite, brandingPulse 1.5s ease-in-out infinite alternate;
-          border: 1px solid rgba(0, 255, 136, 0.5);
+          border: 1px solid rgba(0, 198, 255, 0.5);
           letter-spacing: 1px;
           text-transform: uppercase;
         }
@@ -315,13 +354,13 @@ function App() {
         .logo-icon-wrap {
           width: 36px;
           height: 36px;
-          background: linear-gradient(135deg, var(--primary-color), #00ffcc);
+          background: linear-gradient(135deg, var(--primary-color), var(--accent-purple));
           border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #000;
-          box-shadow: 0 0 10px var(--primary-glow);
+          color: #fff;
+          box-shadow: 0 0 15px var(--primary-glow);
         }
 
         .logo-text { display: flex; flex-direction: column; line-height: 1.1; }

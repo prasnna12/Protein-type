@@ -103,7 +103,7 @@ const SlideHome = ({ next, setData, onLoginRequired, user }) => {
           width: 100%;
           padding: 60px 40px;
           text-align: center;
-          background: linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(6, 182, 212, 0.05) 100%) !important;
+          background: linear-gradient(135deg, rgba(10, 25, 47, 0.4) 0%, rgba(0, 198, 255, 0.05) 100%) !important;
           position: relative;
           overflow: hidden;
         }
@@ -120,7 +120,7 @@ const SlideHome = ({ next, setData, onLoginRequired, user }) => {
 
         .badge-featured {
           display: inline-block;
-          background: rgba(6, 182, 212, 0.1);
+          background: rgba(0, 198, 255, 0.1);
           color: var(--primary-color);
           padding: 6px 16px;
           border-radius: 100px;
@@ -128,16 +128,16 @@ const SlideHome = ({ next, setData, onLoginRequired, user }) => {
           font-weight: 800;
           letter-spacing: 2px;
           margin-bottom: 16px;
-          border: 1px solid rgba(6, 182, 212, 0.2);
+          border: 1px solid rgba(0, 198, 255, 0.2);
         }
 
         .hero-main-title { margin-bottom: 8px; }
         
         .hero-subtitle {
-          font-size: 1.5rem;
+          font-size: 1.2rem;
           color: var(--text-dim);
           font-weight: 600;
-          margin-bottom: 48px;
+          margin-bottom: 40px;
           letter-spacing: -0.5px;
         }
 
@@ -146,8 +146,8 @@ const SlideHome = ({ next, setData, onLoginRequired, user }) => {
         }
 
         .upload-btn {
-          padding: 20px 50px;
-          font-size: 1.2rem;
+          padding: 16px 40px;
+          font-size: 1.1rem;
           box-shadow: 0 10px 40px var(--primary-glow);
         }
 
@@ -156,7 +156,7 @@ const SlideHome = ({ next, setData, onLoginRequired, user }) => {
           padding: 30px;
           text-align: left;
           margin-bottom: 48px;
-          border-color: rgba(6, 182, 212, 0.1);
+          border-color: rgba(0, 198, 255, 0.1);
         }
 
         .info-item {
@@ -178,7 +178,7 @@ const SlideHome = ({ next, setData, onLoginRequired, user }) => {
           display: flex;
           justify-content: center;
           gap: 40px;
-          border-top: 1px solid rgba(6, 182, 212, 0.1);
+          border-top: 1px solid rgba(0, 198, 255, 0.1);
           padding-top: 32px;
         }
 
@@ -189,14 +189,14 @@ const SlideHome = ({ next, setData, onLoginRequired, user }) => {
           gap: 8px;
         }
         .ib-icon {
-          width: 50px;
-          height: 50px;
+          width: 40px;
+          height: 40px;
           background: rgba(255, 255, 255, 0.05);
-          border-radius: 15px;
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.5rem;
+          font-size: 1.2rem;
           transition: 0.3s;
         }
         .icon-badge:hover .ib-icon {

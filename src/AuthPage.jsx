@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import Toast from './Toast';
 import { useAuth } from './AuthContext';
 
 const AuthPage = () => {
+  const [toast, setToast] = useState(null);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,12 +14,24 @@ const AuthPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    // Basic client‑side validation
+    const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
     setLoading(true);
     try {
       if (isLogin) {
         await login(email, password);
+        setToast({ type: 'success', message: 'Logged in successfully' });
       } else {
         await signup(email, password);
+        setToast({ type: 'success', message: 'Account created successfully' });
       }
     } catch (err) {
       setError(err.message.replace('Firebase: ', ''));
@@ -67,6 +81,7 @@ const AuthPage = () => {
 
           <form onSubmit={handleSubmit} className="auth-form">
             {error && <div className="auth-error">{error}</div>}
+        {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
             
             <div className="input-group">
               <label>Email</label>

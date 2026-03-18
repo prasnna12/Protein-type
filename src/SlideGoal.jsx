@@ -11,6 +11,7 @@ const SlideGoal = ({ next, setData, data }) => {
   const [localDiet, setLocalDiet] = useState(data.diet || 'vegetarian');
   const [localHealth, setLocalHealth] = useState(data.healthCondition || 'None');
   const [showError, setShowError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const allGoals = [
     { id: 'bulk',        title: 'Muscle Bulk', multiplier: 2.0, img: imgBulk,     desc: 'Maximum muscle growth strategy.', gender: 'Male' },
@@ -52,13 +53,20 @@ const SlideGoal = ({ next, setData, data }) => {
   }, [data.analysis, selectedGoal]);
 
   const handleContinue = () => {
-    if (!localWeight || !localGender) {
+    const weightVal = parseFloat(localWeight);
+    if (!localWeight || isNaN(weightVal) || weightVal < 10 || weightVal > 250) {
+      setErrorMsg('Please enter a valid weight (10kg - 250kg).');
+      setShowError(true);
+      return;
+    }
+    if (!localGender) {
+      setErrorMsg('Please select your gender.');
       setShowError(true);
       return;
     }
     if (selectedGoal) {
       const mult = getMultiplier(selectedGoal.id);
-      const proteinTarget = Math.round(localWeight * mult);
+      const proteinTarget = Math.round(weightVal * mult);
       setData(prev => ({
         ...prev,
         weight: localWeight,
@@ -129,9 +137,9 @@ const SlideGoal = ({ next, setData, data }) => {
         </div>
       </div>
 
-      {(!localWeight || !localGender) && showError && (
+      {showError && (
         <div className="warning-msg animate-in">
-          ⚠️ Please enter Gender and Body Weight to calculate your daily protein requirement.
+          ⚠️ {errorMsg || 'Please complete your profile details to continue.'}
         </div>
       )}
 
@@ -199,7 +207,7 @@ const SlideGoal = ({ next, setData, data }) => {
         }
         
         .goal-img-wrap {
-          height: 180px;
+          height: 120px;
           position: relative;
           background: #000;
         }
@@ -220,22 +228,24 @@ const SlideGoal = ({ next, setData, data }) => {
           letter-spacing: 1px;
         }
 
-        .goal-card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-        .goal-card-body h3 { font-size: 1.2rem; margin-bottom: 8px; color: #fff; }
-        .goal-card-body p { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 20px; flex: 1; }
+        .goal-card-body { padding: 15px; flex: 1; display: flex; flex-direction: column; }
+        .goal-card-body h3 { font-size: 1rem; margin-bottom: 6px; color: #fff; }
+        .goal-card-body p { font-size: 0.75rem; color: var(--text-dim); line-height: 1.4; margin-bottom: 15px; flex: 1; }
         
         .mult-label { font-size: 0.75rem; font-weight: 800; color: var(--primary-color); background: rgba(0,255,136,0.1); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(0,255,136,0.2); }
 
         .goal-card:hover { transform: translateY(-10px); border-color: var(--primary-color); }
-        .goal-card.active { border-color: var(--primary-color); box-shadow: 0 0 30px var(--primary-glow); }
+        .goal-card.active { border-color: var(--primary-color); box-shadow: 0 0 30px var(--primary-glow), 0 0 10px var(--purple-glow); }
         
         .profile-inputs-section { display: flex; gap: 24px; padding: 24px; margin-bottom: 30px; }
         .input-group { flex: 1; display: flex; flex-direction: column; gap: 8px; text-align: left; }
         .input-group label { font-size: 0.75rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; }
-        .input-group input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; color: #fff; font-size: 1rem; }
+        .input-group input { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; color: #fff; font-size: 1rem; transition: 0.3s; }
+        .input-group input:focus { border-color: var(--primary-color); outline: none; background: rgba(255,255,255,0.06); }
         .gender-toggle { display: flex; gap: 10px; }
-        .gender-toggle button { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; transition: 0.3s; }
-        .gender-toggle button.active { background: var(--primary-color); border-color: var(--primary-color); color: #000; font-weight: 800; }
+        .gender-toggle button { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: #fff; cursor: pointer; transition: 0.3s; font-weight: 700; }
+        .gender-toggle button:hover { background: rgba(255,255,255,0.06); }
+        .gender-toggle button.active { background: linear-gradient(135deg, var(--primary-color), var(--accent-purple)); border-color: var(--primary-color); color: #fff; font-weight: 800; box-shadow: 0 0 15px var(--primary-glow); }
         
         .health-select {
           background: rgba(255,255,255,0.05);
@@ -252,7 +262,7 @@ const SlideGoal = ({ next, setData, data }) => {
         
         .warning-msg { background: rgba(248, 113, 113, 0.1); color: #f87171; padding: 12px; border-radius: 12px; border: 1px solid rgba(248, 113, 113, 0.2); font-size: 0.85rem; font-weight: 700; margin-bottom: 20px; }
         
-        .protein-result-card { background: rgba(0, 255, 136, 0.05); padding: 10px 20px; border-radius: 14px; border: 1px solid rgba(0, 255, 136, 0.2); text-align: left; }
+        .protein-result-card { background: linear-gradient(135deg, rgba(0, 198, 255, 0.1), rgba(127, 90, 240, 0.1)); padding: 12px 24px; border-radius: 16px; border: 1px solid rgba(0, 198, 255, 0.2); text-align: left; box-shadow: 0 0 20px rgba(0, 198, 255, 0.1); }
         .p-res-label { display: block; font-size: 0.65rem; font-weight: 800; color: var(--primary-color); text-transform: uppercase; }
         .p-res-val { font-size: 1.5rem; font-weight: 900; color: #fff; }
 

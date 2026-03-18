@@ -83,10 +83,10 @@ const SlideProfile = ({ next, setData, data }) => {
                 NEURAL ENGINE ANALYZING... {scanProgress}%
               </div>
             )}
-            {!isScanning && analysis.bodyType && (
-              <div className="confidence-badge">
+            {!isScanning && analysis.accuracyScore && (
+              <div className={`confidence-badge ${analysis.isEstimated ? 'estimated' : 'verified'}`}>
                 <div className="conf-wave"></div>
-                <span>98.2% AI CONFIDENCE</span>
+                <span>{analysis.isEstimated ? 'NEURAL ESTIMATE' : `VERIFIED: ${analysis.accuracyScore}`}</span>
               </div>
             )}
             <div className="corner-decor top-left"></div>
@@ -137,10 +137,10 @@ const SlideProfile = ({ next, setData, data }) => {
             <h3>Body Composition Analysis</h3>
             <div className="composition-bars">
               {[
-                { label: 'Body Fat Level', val: parseInt(analysis.bodyFat) || 20, color: parseInt(analysis.bodyFat) > 24 ? '#ff4d4d' : '#f87171' },
-                { label: 'Muscle Density', val: (analysis.muscleMass || 50), color: '#4ade80' },
-                { label: 'Symmetry Score', val: (analysis.fitnessScore || 60), color: '#38bdf8' },
-                { label: 'Overall Vibe', val: (analysis.fitnessScore || 60) + 5, color: 'var(--primary-color)' }
+                { label: 'Body Fat Level', val: parseInt(analysis.bodyFat) || 20, color: parseInt(analysis.bodyFat) > 25 ? '#FF4D4D' : 'var(--primary-color)' },
+                { label: 'Muscle Density', val: (analysis.muscleMass || 50), color: '#00FF9D' },
+                { label: 'Symmetry Score', val: (analysis.fitnessScore || 60), color: '#7F5AF0' },
+                { label: 'Neural Accuracy', val: parseInt(analysis.accuracyScore) || 85, color: '#00C6FF' }
               ].map(bar => (
                 <div key={bar.label} className="comp-bar-item">
                   <div className="comp-bar-info">
@@ -241,25 +241,8 @@ const SlideProfile = ({ next, setData, data }) => {
           animation: fadeIn 0.8s ease forwards;
         }
 
-        .confidence-badge {
-          position: absolute;
-          top: 20px;
-          right: 20px;
-          background: rgba(0, 255, 136, 0.15);
-          backdrop-filter: blur(8px);
-          padding: 6px 14px;
-          border-radius: 8px;
-          border: 1px solid var(--primary-color);
-          color: var(--primary-color);
-          font-size: 0.6rem;
-          font-weight: 900;
-          letter-spacing: 1px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          z-index: 10;
-          overflow: hidden;
-        }
+        .confidence-badge.verified { background: rgba(0, 255, 136, 0.15); border-color: var(--primary-color); color: var(--primary-color); }
+        .confidence-badge.estimated { background: rgba(255, 165, 0, 0.15); border-color: #ffa500; color: #ffa500; }
         .conf-wave {
           width: 4px;
           height: 12px;
@@ -274,15 +257,17 @@ const SlideProfile = ({ next, setData, data }) => {
 
         .dashboard-grid {
           display: grid;
-          grid-template-columns: 1fr 1.5fr;
+          grid-template-columns: 350px 1fr;
           gap: 30px;
         }
 
         /* Left Side */
-        .scan-preview-side { padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+        .scan-preview-side { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
         .scan-image-wrapper {
           position: relative;
-          aspect-ratio: 4/5;
+          width: 200px;
+          margin: 0 auto;
+          aspect-ratio: 3/4;
           border-radius: 20px;
           overflow: hidden;
           background: #000;
@@ -292,8 +277,7 @@ const SlideProfile = ({ next, setData, data }) => {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          opacity: 0.7;
-          filter: grayscale(0.5) contrast(1.2);
+          opacity: 0.85;
         }
 
         .scan-overlay {
@@ -397,12 +381,12 @@ const SlideProfile = ({ next, setData, data }) => {
           grid-template-columns: repeat(3, 1fr);
           gap: 15px;
         }
-        .metric-card { padding: 22px 15px; display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; transition: 0.3s; }
+        .metric-card { padding: 15px 10px; display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; transition: 0.3s; }
         .metric-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.05) !important; }
         .metric-card .label { font-size: 0.6rem; font-weight: 900; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; }
         .metric-card .value { font-size: 1.1rem; font-weight: 950; color: #fff; letter-spacing: -0.5px; }
-        .metric-card.warning .value { color: #ff6b6b; }
-        .metric-card.success .value { color: #4ade80; }
+        .metric-card.warning .value { color: #FF4D4D; }
+        .metric-card.success .value { color: #00FF9D; }
 
         .body-composition-section { padding: 30px; margin-bottom: 24px; }
         .body-composition-section h3 { font-size: 1rem; margin-bottom: 24px; }
@@ -411,8 +395,8 @@ const SlideProfile = ({ next, setData, data }) => {
         .comp-bar-info { display: flex; justify-content: space-between; align-items: center; }
         .comp-bar-info .label { font-size: 0.85rem; font-weight: 700; color: #fff; }
         .comp-bar-info .value { font-size: 0.9rem; font-weight: 900; }
-        .comp-bar-track { height: 10px; background: rgba(255,255,255,0.05); border-radius: 20px; overflow: hidden; position: relative; }
-        .comp-bar-fill { height: 100%; border-radius: 20px; transition: width 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
+        .comp-bar-track { height: 6px; background: rgba(255,255,255,0.05); border-radius: 20px; overflow: hidden; position: relative; }
+        .comp-bar-fill { height: 100%; border-radius: 20px; transition: width 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
 
         .body-part-analysis { padding: 30px; }
         .body-part-analysis h3 { font-size: 1rem; margin-bottom: 24px; }
@@ -440,7 +424,7 @@ const SlideProfile = ({ next, setData, data }) => {
           transition: 0.3s;
         }
         .health-pill:hover { background: rgba(255,255,255,0.08); }
-        .health-pill.active { background: var(--primary-color); border-color: var(--primary-color); color: #000; font-weight: 800; }
+        .health-pill.active { background: linear-gradient(135deg, var(--primary-color), var(--accent-purple)); border-color: var(--primary-color); color: #fff; font-weight: 800; box-shadow: 0 0 15px var(--primary-glow); }
 
         .smart-food-box { margin-top: 25px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 20px; border-left: 4px solid var(--primary-color); }
         .health-alert { font-size: 0.85rem; color: #fff; margin-bottom: 20px; line-height: 1.5; }
